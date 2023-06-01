@@ -43,6 +43,25 @@ func ReadTextFileContents(fileName string) ([]string, error) {
 	return contents, nil
 }
 
+func IsDirectory(path string) (bool, error) {
+
+	isDir := false
+
+	info, err := os.Stat(path)
+
+	if err != nil {
+		LogErrorf(ErrorTemplateIo, err)
+		os.Exit(EXIT_CODE_IO_ERROR)
+	}
+
+	if info.IsDir() {
+		isDir = true
+	}
+
+	LogDebugf(LogTemplateDirectoryExist, path, isDir)
+	return isDir, nil
+}
+
 func FilteredDirectoryTreeFiles(dir string, filter []string) ([]string, error) {
 
 	var filelist []string
@@ -81,4 +100,62 @@ func FilteredDirectoryTreeFiles(dir string, filter []string) ([]string, error) {
 	}
 
 	return filelist, nil
+}
+
+// DirectoryCollision verifies that secondaryDir is not the same as, or a child of, primaryDir.
+// Returns error if either directory path does not exist or is a file.
+func DirectoryCollision(primaryDir string, secondaryDir string) (bool, error) {
+
+	LogInfof(LogTemplateCheckDirectoryCollision, LogPrimaryDir, primaryDir, LogSecondaryDir, secondaryDir)
+
+	var (
+		err          error
+		absPrimary   string
+		absSecondary string
+	)
+	checklist := []string{primaryDir, secondaryDir}
+
+	// Are they both directories
+	for _, dir := range checklist {
+		isDir, err := IsDirectory(dir)
+		if err != nil {
+			LogErrorf(ErrorTemplateIo, err)
+			os.Exit(EXIT_CODE_IO_ERROR)
+		}
+		if !isDir {
+			LogDebugf(LogTemplateDirectoryExist, dir, isDir)
+			os.Exit(EXIT_CODE_CONFIGURATION_ERROR)
+		}
+	}
+
+	// Get the full paths
+	absPrimary, err = filepath.Abs(primaryDir)
+	if err != nil {
+		LogErrorf(ErrorTemplateIo, err)
+		os.Exit(EXIT_CODE_IO_ERROR)
+	}
+
+	absSecondary, err = filepath.Abs(secondaryDir)
+	if err != nil {
+		LogErrorf(ErrorTemplateIo, err)
+		os.Exit(EXIT_CODE_IO_ERROR)
+	}
+	LogDebugf(LogPrimaryDir+": [%s]", absPrimary)
+	LogDebugf(LogSecondaryDir+": [%s]", absSecondary)
+
+	// Are they the same
+	if absPrimary == absSecondary {
+		LogInfof(LogTemplatePathsMatch, absPrimary)
+		return true, nil
+	}
+
+	// Is secondary a child of primary?
+	if strings.HasPrefix(absSecondary, absPrimary) {
+		LogInfof(LogTemplatePathCollision, absSecondary, absPrimary)
+		return true, nil
+	}
+
+	// If we are here, there is no identifiable collision
+	LogInfof(LogNoPathCollision)
+	return false, nil
 }
