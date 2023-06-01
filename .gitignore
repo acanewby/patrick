@@ -9,13 +9,6 @@
 *.dylib
 
 
-################################################
-# Wails
-################################################
-/build/bin
-/build/logs
-/frontend/dist
-
 
 
 # Test binary, built with `go test -c`
@@ -47,6 +40,7 @@
 *.ear
 *.sar
 *.class
+*.log
 
 
 
