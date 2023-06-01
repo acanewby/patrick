@@ -1,19 +1,24 @@
 package logger
 
 import (
+	"github.com/acanewby/patrick/internal/common"
 	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
+	"os"
+	"strings"
 )
 
 var (
 	zapLog   *zap.Logger
 	zapSugar *zap.SugaredLogger
+	lvl      = zap.NewAtomicLevelAt(zap.InfoLevel)
 )
 
 func init() {
 	var err error
 	var config zap.Config
 
-	config.Level = zap.NewAtomicLevelAt(zap.DebugLevel)
+	config.Level = lvl
 	config.OutputPaths = []string{"./patrick.log"}
 	config.Development = true
 	config.DisableCaller = false
@@ -29,6 +34,27 @@ func init() {
 		panic(err)
 	}
 	zapSugar = zapLog.Sugar()
+
+}
+
+func LogLevel() zapcore.Level {
+	return zapSugar.Level()
+}
+
+func SetLogLevel(level string) {
+
+	var l zap.AtomicLevel
+	var err error
+
+	if l, err = zap.ParseAtomicLevel(strings.ToLower(level)); err != nil {
+		Errorf(common.ErrorTemplateParseError, err)
+		os.Exit(common.EXIT_CODE_CONFIGURATION_ERROR)
+	} else {
+		Infof(common.LogTemplateSettingLogLevel, l)
+		lvl.SetLevel(l.Level())
+		Infof(common.LogTemplateSetLogLevel, l)
+	}
+
 }
 
 func Infof(message string, fields ...any) {
@@ -37,6 +63,10 @@ func Infof(message string, fields ...any) {
 
 func Debugf(message string, fields ...any) {
 	zapSugar.Debugf(message, fields...)
+}
+
+func Warnf(message string, fields ...any) {
+	zapSugar.Warnf(message, fields...)
 }
 
 func Errorf(message string, fields ...any) {

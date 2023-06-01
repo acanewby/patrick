@@ -14,11 +14,7 @@ var listCmd = &cobra.Command{
 	Short: "List the files that will be targeted for processing",
 	Long:  `Lists all files that will be targeted for processing, taking into account inclusion and exclusion criteria.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		patrick.List(patrick.Config{
-			InputDir:    inputDir,
-			OutputDir:   outputDir,
-			ExcludeFile: excludedNamesFile,
-		})
+		patrick.List(constructConfig())
 	},
 }
 
