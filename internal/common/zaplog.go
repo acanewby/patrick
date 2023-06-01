@@ -1,7 +1,6 @@
-package logger
+package common
 
 import (
-	"github.com/acanewby/patrick/internal/common"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"os"
@@ -11,26 +10,25 @@ import (
 var (
 	zapLog   *zap.Logger
 	zapSugar *zap.SugaredLogger
-	lvl      = zap.NewAtomicLevelAt(zap.InfoLevel)
+	logLevel = zap.NewAtomicLevelAt(zap.InfoLevel)
 )
 
 func init() {
 	var err error
 	var config zap.Config
 
-	config.Level = lvl
+	encoderConfig := zap.NewDevelopmentEncoderConfig()
+	encoderConfig.StacktraceKey = "" // to hide stacktrace info
+
+	config.Level = logLevel
 	config.OutputPaths = []string{"./patrick.log"}
 	config.Development = true
 	config.DisableCaller = false
 	config.DisableStacktrace = false
 	config.Encoding = "console"
-
-	encoderConfig := zap.NewDevelopmentEncoderConfig()
-	encoderConfig.StacktraceKey = "" // to hide stacktrace info
 	config.EncoderConfig = encoderConfig
 
-	zapLog, err = config.Build(zap.AddCallerSkip(1))
-	if err != nil {
+	if zapLog, err = config.Build(zap.AddCallerSkip(1)); err != nil {
 		panic(err)
 	}
 	zapSugar = zapLog.Sugar()
@@ -47,32 +45,32 @@ func SetLogLevel(level string) {
 	var err error
 
 	if l, err = zap.ParseAtomicLevel(strings.ToLower(level)); err != nil {
-		Errorf(common.ErrorTemplateParseError, err)
-		os.Exit(common.EXIT_CODE_CONFIGURATION_ERROR)
+		LogErrorf(ErrorTemplateParseError, err)
+		os.Exit(EXIT_CODE_CONFIGURATION_ERROR)
 	} else {
-		Infof(common.LogTemplateSettingLogLevel, l)
-		lvl.SetLevel(l.Level())
-		Infof(common.LogTemplateSetLogLevel, l)
+		LogInfof(LogTemplateSettingLogLevel, l)
+		logLevel.SetLevel(l.Level())
+		LogInfof(LogTemplateSetLogLevel, l)
 	}
 
 }
 
-func Infof(message string, fields ...any) {
+func LogInfof(message string, fields ...any) {
 	zapSugar.Infof(message, fields...)
 }
 
-func Debugf(message string, fields ...any) {
+func LogDebugf(message string, fields ...any) {
 	zapSugar.Debugf(message, fields...)
 }
 
-func Warnf(message string, fields ...any) {
+func LogWarnf(message string, fields ...any) {
 	zapSugar.Warnf(message, fields...)
 }
 
-func Errorf(message string, fields ...any) {
+func LogErrorf(message string, fields ...any) {
 	zapSugar.Errorf(message, fields...)
 }
 
-func Fatalf(message string, fields ...any) {
+func LogFatalf(message string, fields ...any) {
 	zapSugar.Fatalf(message, fields...)
 }
