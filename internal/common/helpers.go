@@ -2,6 +2,7 @@ package common
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -16,7 +17,40 @@ func SingleLineToConsole() {
 	fmt.Println(strings.Repeat(SingleLineChar, ScreenWidth))
 }
 
-func ReadTextFileContents(fileName string) ([]string, error) {
+func ConsolidateWhitespace(line string) string {
+
+	// Top and tail
+	result := strings.TrimSpace(line)
+
+	// Replace non-space whitespace
+	result = strings.ReplaceAll(result, "\t", "")
+	result = strings.ReplaceAll(result, "\n", "")
+	result = strings.ReplaceAll(result, "\v", "")
+	result = strings.ReplaceAll(result, "\r", "")
+	result = strings.ReplaceAll(result, "\f", "")
+	result = strings.ReplaceAll(result, "\f", "")
+	result = strings.ReplaceAll(result, "\u0085", "")
+	result = strings.ReplaceAll(result, "\u00A0", "")
+
+	// Replace duplicate spaces within string
+	for {
+
+		// Measure before/after of space consolidation
+		startLen := len(result)
+		result = strings.ReplaceAll(result, "  ", " ")
+		endLen := len(result)
+
+		// We haven't consolidated any more spaces
+		if startLen == endLen {
+			break
+		}
+
+	}
+
+	return result
+}
+
+func GetTextFileContents(fileName string) ([]string, error) {
 
 	var err error
 	var file *os.File
@@ -36,7 +70,7 @@ func ReadTextFileContents(fileName string) ([]string, error) {
 
 	for fileScanner.Scan() {
 		line := fileScanner.Text()
-		LogDebugf(LogTemplateFileRead, line)
+		LogDebugf(LogTemplateFileReadLine, line)
 		contents = append(contents, line)
 	}
 
@@ -51,7 +85,7 @@ func IsDirectory(path string) (bool, error) {
 
 	if err != nil {
 		LogErrorf(ErrorTemplateIo, err)
-		os.Exit(EXIT_CODE_IO_ERROR)
+		return false, err
 	}
 
 	if info.IsDir() {
@@ -62,9 +96,19 @@ func IsDirectory(path string) (bool, error) {
 	return isDir, nil
 }
 
-func FilteredDirectoryTreeFiles(dir string, filter []string) ([]string, error) {
+func MkDirP(path string) error {
+	if err := os.MkdirAll(path, os.ModePerm); err != nil {
+		return err
+	}
+	LogDebugf(LogTemplateDirectoryExist, path, true)
+	return nil
+}
 
-	var filelist []string
+func TraverseFilteredDirectoryTree(dir string, filter []string, worker traverseWorker) error {
+
+	fmt.Println(UiLabelFilesToProcess)
+	SingleLineToConsole()
+
 	var excludeList = make(map[string]string)
 	var err error
 
@@ -88,7 +132,10 @@ func FilteredDirectoryTreeFiles(dir string, filter []string) ([]string, error) {
 			if skipFile {
 				LogInfof(LogTemplateFileSkip, path)
 			} else {
-				filelist = append(filelist, path)
+				if err = worker(path); err != nil {
+					LogErrorf(ErrorTemplateUndeterminedExecution, err)
+					return err
+				}
 			}
 
 			// All good - continue
@@ -96,10 +143,12 @@ func FilteredDirectoryTreeFiles(dir string, filter []string) ([]string, error) {
 
 		}); err != nil {
 		LogErrorf(ErrorTemplateFileRead, err)
-		os.Exit(EXIT_CODE_IO_ERROR)
+		return err
 	}
 
-	return filelist, nil
+	SingleLineToConsole()
+
+	return nil
 }
 
 // DirectoryCollision verifies that secondaryDir is not the same as, or a child of, primaryDir.
@@ -120,11 +169,12 @@ func DirectoryCollision(primaryDir string, secondaryDir string) (bool, error) {
 		isDir, err := IsDirectory(dir)
 		if err != nil {
 			LogErrorf(ErrorTemplateIo, err)
-			os.Exit(EXIT_CODE_IO_ERROR)
+			return false, err
 		}
 		if !isDir {
-			LogDebugf(LogTemplateDirectoryExist, dir, isDir)
-			os.Exit(EXIT_CODE_CONFIGURATION_ERROR)
+			msg := fmt.Sprintf(LogTemplateDirectoryExist, dir, isDir)
+			LogDebugf(msg)
+			return false, errors.New(msg)
 		}
 	}
 
@@ -132,13 +182,13 @@ func DirectoryCollision(primaryDir string, secondaryDir string) (bool, error) {
 	absPrimary, err = filepath.Abs(primaryDir)
 	if err != nil {
 		LogErrorf(ErrorTemplateIo, err)
-		os.Exit(EXIT_CODE_IO_ERROR)
+		return false, err
 	}
 
 	absSecondary, err = filepath.Abs(secondaryDir)
 	if err != nil {
 		LogErrorf(ErrorTemplateIo, err)
-		os.Exit(EXIT_CODE_IO_ERROR)
+		return false, err
 	}
 	LogDebugf(LogPrimaryDir+": [%s]", absPrimary)
 	LogDebugf(LogSecondaryDir+": [%s]", absSecondary)
@@ -151,6 +201,12 @@ func DirectoryCollision(primaryDir string, secondaryDir string) (bool, error) {
 
 	// Is secondary a child of primary?
 	if strings.HasPrefix(absSecondary, absPrimary) {
+		LogInfof(LogTemplatePathCollision, absSecondary, absPrimary)
+		return true, nil
+	}
+
+	// Is secondary an ancestor of primary?
+	if strings.HasPrefix(absPrimary, absSecondary) {
 		LogInfof(LogTemplatePathCollision, absSecondary, absPrimary)
 		return true, nil
 	}

@@ -1,12 +1,21 @@
 package patrick
 
-import "github.com/acanewby/patrick/internal/patrick"
+import (
+	"github.com/acanewby/patrick/internal/common"
+	"strings"
+)
 
-func constructConfig() patrick.Config {
-	return patrick.Config{
-		InputDir:    inputDir,
-		OutputDir:   outputDir,
-		ExcludeFile: excludedNamesFile,
-		LogLevel:    logLevel,
+func constructConfig() common.Config {
+	return common.Config{
+		InputDir:                   inputDir,
+		OutputDir:                  outputDir,
+		ExcludeFile:                excludedNamesFile,
+		LogLevel:                   logLevel,
+		PackageIdentifier:          packageIdentifier,
+		ResourceFileDelimiter:      resourceFileDelimiter,
+		StringDelimiters:           strings.Split(stringDelimiters, ","),
+		SingleLineCommentDelimiter: singleCommentDelimiter,
+		BlockCommentBeginDelimiter: blockCommentBeginDelimiter,
+		BlockCommentEndDelimiter:   blockCommentEndDelimiter,
 	}
 }

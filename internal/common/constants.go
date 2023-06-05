@@ -5,6 +5,7 @@ const (
 	EXIT_CODE_INVOCATION_ERROR
 	EXIT_CODE_IO_ERROR
 	EXIT_CODE_CONFIGURATION_ERROR
+	EXIT_CODER_TRAVERSER_EXECUTION
 )
 
 const (
@@ -12,24 +13,40 @@ const (
 	DoubleLineChar = "="
 	SingleLineChar = "-"
 
-	FlagLogLevel     = "logLevel"
-	FlagInputDir     = "inputDir"
-	FlagOutputDir    = "outputDir"
-	FlagExcludeFiles = "excludeFiles"
+	FlagLogLevel                   = "logLevel"
+	FlagInputDir                   = "inputDir"
+	FlagOutputDir                  = "outputDir"
+	FlagExcludeFiles               = "excludeFiles"
+	FlagPackageIdentifier          = "packageIdentifier"
+	FlagResourceFileDelimiter      = "ResourceFileDelimiter"
+	FlagStringDelimiters           = "stringDelimiters"
+	FlagSingleCommentDelimiter     = "singleCommentDelimiter"
+	FlagBlockCommentDelimiterBegin = "blockCommentDelimiterBegin"
+	FlagBlockCommentDelimiterEnd   = "blockCommentDelimiterEnd"
 
-	UiLabelFilesToProcess    = "Files to process"
-	UiTemplateProcessingFile = "Processing file: %s"
-	UiTemplateInputDir       = "Input directory  : %s"
-	UiTemplateOutputDir      = "Output directory : %s"
-	UiTemplateExcludesFile   = "Exclude files    : %s"
-	UiTemplateLogLevel       = "Log level        : %s"
-	UiTemplateDirCollision   = "Directory collision: %s overlaps with %s"
+	UiLabelFilesToProcess                = "Files to process"
+	UiTemplateProcessingFile             = "Processing file: %s"
+	UiTemplateOutputFile                 = "Output file: %s"
+	UiTemplateInputDir                   = "Input directory               : %s"
+	UiTemplateOutputDir                  = "Output directory              : %s"
+	UiTemplateExcludesFile               = "Exclude files                 : %s"
+	UiTemplateLogLevel                   = "Log level                     : %s"
+	UiTemplatePackageidentifier          = "Package identifier            : %s"
+	UiTemplateResourceFileDelimiter      = "Resource file delimiter       : %s"
+	UiTemplateStringDelimiters           = "String delimiters             : %+v"
+	UiTemplateSingleLineDelimiter        = "Single line comment delimiter : %s"
+	UiTemplateBlockCommentBeginDelimiter = "Block comment begin delimiter : %s"
+	UiTemplateBlockCommentEndDelimiter   = "Block comment end delimiter   : %s"
+
+	UiTemplateDirCollision = "Directory collision: %s overlaps with %s"
 
 	ErrorTemplateInvocation            = "invocation error: [%v]"
 	ErrorTemplateUndeterminedExecution = "undetermined execution error: [%v]"
 	ErrorTemplateIo                    = "I/O error: [%v]"
 	ErrorTemplateFileRead              = "error reading file: [%v]"
+	ErrorTemplateFileWrite             = "error writing file: [%v]"
 	ErrorTemplateParseError            = "parse error: [%+v]"
+	ErrorTemplateTraverserExecution    = "error executing traverser: [%v]"
 
 	LogTemplateCheckDirectoryCollision = "checking for directory collision: [%s: %s vs. %s: %s]"
 	LogPrimaryDir                      = "primary directory"
@@ -37,8 +54,14 @@ const (
 	LogTemplatePathsMatch              = "paths match: [%s]"
 	LogTemplatePathCollision           = "path: [%s] collides with: [%s]"
 	LogNoPathCollision                 = "paths do not collide"
-	LogTemplateFileRead                = "read file line: [%s]"
+	LogTemplateFileReadLine            = "read file line: [%s]"
+	LogTemplateFileTrimmedLine         = "trimmed file line: [%s]"
+	LogTemplateDelimiterNotDetected    = "delimiter not detected : [%s]"
+	LogTemplateDelimiterDetected       = "delimiter detected : [%s]"
+	LogTemplateDelimiterPosition       = "delimiter detected at position: [%s -> %d]"
+	LogTemplatePackage                 = "identified package: [%s]"
 	LogTemplateFileOpen                = "opening file: [%s]"
+	LogTemplateFileOutput              = "outputting file: [%s]"
 	LogTemplateFileSkip                = "skipping file: [%s]"
 	LogTemplateDirectorySkip           = "skipping directory: [%s]"
 	LogTemplateConfig                  = "config: [%+v]"

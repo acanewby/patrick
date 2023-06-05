@@ -12,7 +12,13 @@ import (
 )
 
 var (
-	outputDir string
+	outputDir                  string
+	packageIdentifier          string
+	resourceFileDelimiter      string
+	stringDelimiters           string
+	singleCommentDelimiter     string
+	blockCommentBeginDelimiter string
+	blockCommentEndDelimiter   string
 )
 
 // convertCmd represents the convert command
@@ -25,7 +31,8 @@ var convertCmd = &cobra.Command{
 - outputs converted source files
 - outputs associated resource files`,
 	Run: func(cmd *cobra.Command, args []string) {
-		patrick.Convert(constructConfig())
+		common.SetConfig(constructConfig())
+		patrick.Convert()
 	},
 }
 
@@ -34,6 +41,12 @@ func init() {
 	var err error
 
 	convertCmd.Flags().StringVarP(&outputDir, common.FlagOutputDir, "", "", "Output directory")
+	convertCmd.Flags().StringVarP(&packageIdentifier, common.FlagPackageIdentifier, "", "package", "Keyword identifying package for this language system (default \"package\")")
+	convertCmd.Flags().StringVarP(&resourceFileDelimiter, common.FlagResourceFileDelimiter, "", "|", "Delimiter separating resource id and value in resource file (default \",\")")
+	convertCmd.Flags().StringVarP(&stringDelimiters, common.FlagStringDelimiters, "", "\",'", "Comma-separated list of string delimiters used by this language system (default\"\\\",'\")")
+	convertCmd.Flags().StringVarP(&singleCommentDelimiter, common.FlagSingleCommentDelimiter, "", "//", "Single-line comment delimiter used by this language system (default\"//\")")
+	convertCmd.Flags().StringVarP(&blockCommentBeginDelimiter, common.FlagBlockCommentDelimiterBegin, "", "/*", "Block comment begin delimiter used by this language system (default\"/*\")")
+	convertCmd.Flags().StringVarP(&blockCommentEndDelimiter, common.FlagBlockCommentDelimiterEnd, "", "*/", "Block comment end delimiter used by this language system (default\"*/\")")
 
 	if err = convertCmd.MarkFlagDirname(common.FlagOutputDir); err != nil {
 		fmt.Println(fmt.Sprintf(common.ErrorTemplateInvocation, err))

@@ -4,6 +4,7 @@ Copyright © 2023 Adrian Newby <acanewby@yahoo.com>
 package patrick
 
 import (
+	"github.com/acanewby/patrick/internal/common"
 	"github.com/acanewby/patrick/internal/patrick"
 	"github.com/spf13/cobra"
 )
@@ -14,7 +15,8 @@ var listCmd = &cobra.Command{
 	Short: "List the files that will be targeted for processing",
 	Long:  `Lists all files that will be targeted for processing, taking into account inclusion and exclusion criteria.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		patrick.List(constructConfig())
+		common.SetConfig(constructConfig())
+		patrick.List()
 	},
 }
 
