@@ -215,3 +215,42 @@ func DirectoryCollision(primaryDir string, secondaryDir string) (bool, error) {
 	LogInfof(LogNoPathCollision)
 	return false, nil
 }
+
+func OpenFileForRead(path string) (*os.File, error) {
+	var (
+		in  *os.File
+		err error
+	)
+	LogInfof(LogTemplateFileOpen, path)
+	if in, err = os.Open(path); err != nil {
+		LogErrorf(ErrorTemplateFileRead, err)
+		return nil, err
+	}
+	return in, nil
+}
+
+func OpenFileForOverwrite(outputPath string) (*os.File, error) {
+	var (
+		out *os.File
+		err error
+	)
+	if out, err = os.Create(outputPath); err != nil {
+		LogErrorf(ErrorTemplateFileWrite, err)
+		return nil, err
+	}
+
+	return out, nil
+}
+
+func OpenFileForAppend(outputPath string) (*os.File, error) {
+	var (
+		out *os.File
+		err error
+	)
+	if out, err = os.OpenFile(outputPath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644); err != nil {
+		LogErrorf(ErrorTemplateFileWrite, err)
+		return nil, err
+	}
+
+	return out, nil
+}

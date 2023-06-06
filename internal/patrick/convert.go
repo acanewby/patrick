@@ -43,29 +43,28 @@ It outputs two files:
   - a converted version of the input file, with system-generated tokens in place of the identified literals
   - a resource file with token:literal mappings
 */
-func convertFile(path string) error {
+func convertFile(inputFilePath string) error {
 
 	var (
 		err         error
 		in          *os.File
 		out         *os.File
+		res         *os.File
 		packageName string
 	)
 
 	cfg := common.GetConfig()
-	// inBlockComment := false
 
-	fmt.Println(fmt.Sprintf(common.UiTemplateProcessingFile, path))
+	fmt.Println(fmt.Sprintf(common.UiTemplateProcessingFile, inputFilePath))
 
 	// --- setup ------
 
 	// 0. Open input file (IN) for read (err if fail)
-	common.LogInfof(common.LogTemplateFileOpen, path)
-	if in, err = os.Open(path); err != nil {
-		common.LogErrorf(common.ErrorTemplateFileRead, err)
+	if in, err = common.OpenFileForRead(inputFilePath); err != nil {
 		return err
 	}
 	defer func(in *os.File) {
+		common.LogDebugf(common.LogTemplateFileClose, in.Name())
 		err := in.Close()
 		if err != nil {
 			msg := fmt.Sprintf(common.ErrorTemplateIo, err)
@@ -76,21 +75,18 @@ func convertFile(path string) error {
 	}(in)
 
 	// 1. Open output file (OUT) for write (err if already exists?)
-	projectFilename := strings.Replace(path, cfg.InputDir, "", 1)
-	outputPath := filepath.Join(cfg.OutputDir, projectFilename)
-	common.LogInfof(common.LogTemplateFileOutput, outputPath)
+	outputFilePath, outputDir := determineOutputDestinations(inputFilePath, cfg)
 
-	outputDir := strings.Replace(outputPath, filepath.Base(outputPath), "", 1)
 	if err = common.MkDirP(outputDir); err != nil {
 		common.LogErrorf(common.ErrorTemplateIo, err)
 		return err
 	}
 
-	if out, err = os.Create(outputPath); err != nil {
-		common.LogErrorf(common.ErrorTemplateFileWrite, err)
+	if out, err = common.OpenFileForOverwrite(outputFilePath); err != nil {
 		return err
 	}
 	defer func(out *os.File) {
+		common.LogDebugf(common.LogTemplateFileClose, out.Name())
 		err := out.Close()
 		if err != nil {
 			msg := fmt.Sprintf(common.ErrorTemplateIo, err)
@@ -101,8 +97,11 @@ func convertFile(path string) error {
 	}(out)
 
 	// --- process IN line by line ------
+	// inBlockComment := false
+
 	fileScanner := bufio.NewScanner(in)
 	fileScanner.Split(bufio.ScanLines)
+
 	for fileScanner.Scan() {
 		line := fileScanner.Text()
 		common.LogDebugf(common.LogTemplateFileReadLine, line)
@@ -123,7 +122,21 @@ func convertFile(path string) error {
 		}
 
 		// 3. Open package resource files (RES) for append
-		// defer close
+		resourceFilePath := filepath.Join(outputDir, fmt.Sprintf("%s%s", packageName, common.ResourceFileExtension))
+		if res, err = common.OpenFileForAppend(resourceFilePath); err != nil {
+			return err
+		}
+		defer func(res *os.File) {
+			common.LogDebugf(common.LogTemplateFileClose, res.Name())
+			err := res.Close()
+			if err != nil {
+				msg := fmt.Sprintf(common.ErrorTemplateIo, err)
+				common.LogErrorf(msg)
+				fmt.Println(msg)
+				os.Exit(common.EXIT_CODE_IO_ERROR)
+			}
+		}(res)
+		res.WriteString("hello\n")
 
 		// 4. Identify string literals
 
@@ -136,6 +149,14 @@ func convertFile(path string) error {
 	}
 
 	return nil
+}
+
+func determineOutputDestinations(path string, cfg common.Config) (string, string) {
+	projectFilename := strings.Replace(path, cfg.InputDir, "", 1)
+	outputPath := filepath.Join(cfg.OutputDir, projectFilename)
+	common.LogInfof(common.LogTemplateFileOutput, outputPath)
+	outputDir := strings.Replace(outputPath, filepath.Base(outputPath), "", 1)
+	return outputPath, outputDir
 }
 
 func semanticLine(line string) string {

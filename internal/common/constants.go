@@ -13,6 +13,8 @@ const (
 	DoubleLineChar = "="
 	SingleLineChar = "-"
 
+	ResourceFileExtension = ".resource"
+
 	FlagLogLevel                   = "logLevel"
 	FlagInputDir                   = "inputDir"
 	FlagOutputDir                  = "outputDir"
@@ -61,6 +63,7 @@ const (
 	LogTemplateDelimiterPosition       = "delimiter detected at position: [%s -> %d]"
 	LogTemplatePackage                 = "identified package: [%s]"
 	LogTemplateFileOpen                = "opening file: [%s]"
+	LogTemplateFileClose               = "closing file: [%s]"
 	LogTemplateFileOutput              = "outputting file: [%s]"
 	LogTemplateFileSkip                = "skipping file: [%s]"
 	LogTemplateDirectorySkip           = "skipping directory: [%s]"
