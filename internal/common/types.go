@@ -12,7 +12,7 @@ type Config struct {
 	LogLevel                   string
 	PackageIdentifier          string
 	ResourceFileDelimiter      string
-	StringDelimiters           []string
+	StringDelimiter            string
 	SingleLineCommentDelimiter string
 	BlockCommentBeginDelimiter string
 	BlockCommentEndDelimiter   string

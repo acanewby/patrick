@@ -196,17 +196,20 @@ func DirectoryCollision(primaryDir string, secondaryDir string) (bool, error) {
 	// Are they the same
 	if absPrimary == absSecondary {
 		LogInfof(LogTemplatePathsMatch, absPrimary)
+		fmt.Println(fmt.Sprintf(UiTemplateDirCollision, primaryDir, secondaryDir))
 		return true, nil
 	}
 
 	// Is secondary a child of primary?
 	if strings.HasPrefix(absSecondary, absPrimary) {
 		LogInfof(LogTemplatePathCollision, absSecondary, absPrimary)
+		fmt.Println(fmt.Sprintf(UiTemplateDirCollision, primaryDir, secondaryDir))
 		return true, nil
 	}
 
 	// Is secondary an ancestor of primary?
 	if strings.HasPrefix(absPrimary, absSecondary) {
+		fmt.Println(fmt.Sprintf(UiTemplateDirCollision, primaryDir, secondaryDir))
 		LogInfof(LogTemplatePathCollision, absSecondary, absPrimary)
 		return true, nil
 	}
@@ -253,4 +256,15 @@ func OpenFileForAppend(outputPath string) (*os.File, error) {
 	}
 
 	return out, nil
+}
+
+func CloseFile(f *os.File) {
+	LogDebugf(LogTemplateFileClose, f.Name())
+	err := f.Close()
+	if err != nil {
+		msg := fmt.Sprintf(ErrorTemplateIo, err)
+		LogErrorf(msg)
+		fmt.Println(msg)
+		os.Exit(EXIT_CODE_IO_ERROR)
+	}
 }

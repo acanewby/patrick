@@ -13,7 +13,8 @@ import (
 var listCmd = &cobra.Command{
 	Use:   "list",
 	Short: "List the files that will be targeted for processing",
-	Long:  `Lists all files that will be targeted for processing, taking into account inclusion and exclusion criteria.`,
+	Long: `
+Lists all files that will be targeted for processing, taking into account inclusion and exclusion criteria.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		common.SetConfig(constructConfig())
 		patrick.List()

@@ -15,7 +15,7 @@ var (
 	outputDir                  string
 	packageIdentifier          string
 	resourceFileDelimiter      string
-	stringDelimiters           string
+	stringDelimiter            string
 	singleCommentDelimiter     string
 	blockCommentBeginDelimiter string
 	blockCommentEndDelimiter   string
@@ -25,7 +25,8 @@ var (
 var convertCmd = &cobra.Command{
 	Use:   "convert",
 	Short: "Process files and apply string literal tokenizations",
-	Long: `Processes the identified list of files and:
+	Long: `
+Processes the identified list of files and:
 
 - identifies and tokenizes string literals
 - outputs converted source files
@@ -40,13 +41,13 @@ func init() {
 
 	var err error
 
-	convertCmd.Flags().StringVarP(&outputDir, common.FlagOutputDir, "", "", "Output directory")
-	convertCmd.Flags().StringVarP(&packageIdentifier, common.FlagPackageIdentifier, "", "package", "Keyword identifying package for this language system (default \"package\")")
-	convertCmd.Flags().StringVarP(&resourceFileDelimiter, common.FlagResourceFileDelimiter, "", "|", "Delimiter separating resource id and value in resource file (default \",\")")
-	convertCmd.Flags().StringVarP(&stringDelimiters, common.FlagStringDelimiters, "", "\",'", "Comma-separated list of string delimiters used by this language system (default\"\\\",'\")")
-	convertCmd.Flags().StringVarP(&singleCommentDelimiter, common.FlagSingleCommentDelimiter, "", "//", "Single-line comment delimiter used by this language system (default\"//\")")
-	convertCmd.Flags().StringVarP(&blockCommentBeginDelimiter, common.FlagBlockCommentDelimiterBegin, "", "/*", "Block comment begin delimiter used by this language system (default\"/*\")")
-	convertCmd.Flags().StringVarP(&blockCommentEndDelimiter, common.FlagBlockCommentDelimiterEnd, "", "*/", "Block comment end delimiter used by this language system (default\"*/\")")
+	convertCmd.Flags().StringVarP(&outputDir, common.FlagOutputDir, "", "", "output directory")
+	convertCmd.Flags().StringVarP(&packageIdentifier, common.FlagPackageIdentifier, "", "package", "keyword identifying package for this language system")
+	convertCmd.Flags().StringVarP(&resourceFileDelimiter, common.FlagResourceFileDelimiter, "", "|", "delimiter separating resource id and value in resource file")
+	convertCmd.Flags().StringVarP(&stringDelimiter, common.FlagStringDelimiter, "", "\"", "string delimiter used by this language system")
+	convertCmd.Flags().StringVarP(&singleCommentDelimiter, common.FlagSingleCommentDelimiter, "", "//", "single-line comment delimiter used by this language system")
+	convertCmd.Flags().StringVarP(&blockCommentBeginDelimiter, common.FlagBlockCommentDelimiterBegin, "", "/*", "block comment begin delimiter used by this language system")
+	convertCmd.Flags().StringVarP(&blockCommentEndDelimiter, common.FlagBlockCommentDelimiterEnd, "", "*/", "block comment end delimiter used by this language system")
 
 	if err = convertCmd.MarkFlagDirname(common.FlagOutputDir); err != nil {
 		fmt.Println(fmt.Sprintf(common.ErrorTemplateInvocation, err))

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/acanewby/patrick/internal/common"
 	"os"
+	"regexp"
 )
 
 func setupRun(cfg common.Config) []string {
@@ -39,10 +40,25 @@ func dumpConfig(cfg common.Config) {
 	fmt.Println(fmt.Sprintf(common.UiTemplateLogLevel, cfg.LogLevel))
 	fmt.Println(fmt.Sprintf(common.UiTemplatePackageidentifier, cfg.PackageIdentifier))
 	fmt.Println(fmt.Sprintf(common.UiTemplateResourceFileDelimiter, cfg.ResourceFileDelimiter))
-	fmt.Println(fmt.Sprintf(common.UiTemplateStringDelimiters, cfg.StringDelimiters))
+	fmt.Println(fmt.Sprintf(common.UiTemplateStringDelimiter, cfg.StringDelimiter))
 	fmt.Println(fmt.Sprintf(common.UiTemplateSingleLineDelimiter, cfg.SingleLineCommentDelimiter))
 	fmt.Println(fmt.Sprintf(common.UiTemplateBlockCommentBeginDelimiter, cfg.BlockCommentBeginDelimiter))
 	fmt.Println(fmt.Sprintf(common.UiTemplateBlockCommentEndDelimiter, cfg.BlockCommentEndDelimiter))
 
 	common.DoubleLineToConsole()
+}
+
+func extractStringLiterals(line string) []string {
+
+	cfg := common.GetConfig()
+
+	// Find instances of non-string-delimiter characters between pairs of string delimiters
+	r := regexp.MustCompile(fmt.Sprintf(`(\%s[^%s]*\%s)`, cfg.StringDelimiter, cfg.StringDelimiter, cfg.StringDelimiter))
+
+	// Get the list of identified literals
+	literals := r.FindAllString(line, -1)
+
+	common.LogDebugf(common.LogTemplateLiteralsDetected, literals)
+
+	return literals
 }

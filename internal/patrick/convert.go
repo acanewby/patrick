@@ -63,16 +63,7 @@ func convertFile(inputFilePath string) error {
 	if in, err = common.OpenFileForRead(inputFilePath); err != nil {
 		return err
 	}
-	defer func(in *os.File) {
-		common.LogDebugf(common.LogTemplateFileClose, in.Name())
-		err := in.Close()
-		if err != nil {
-			msg := fmt.Sprintf(common.ErrorTemplateIo, err)
-			common.LogErrorf(msg)
-			fmt.Println(msg)
-			os.Exit(common.EXIT_CODE_IO_ERROR)
-		}
-	}(in)
+	defer common.CloseFile(in)
 
 	// 1. Open output file (OUT) for write (err if already exists?)
 	outputFilePath, outputDir := determineOutputDestinations(inputFilePath, cfg)
@@ -85,16 +76,7 @@ func convertFile(inputFilePath string) error {
 	if out, err = common.OpenFileForOverwrite(outputFilePath); err != nil {
 		return err
 	}
-	defer func(out *os.File) {
-		common.LogDebugf(common.LogTemplateFileClose, out.Name())
-		err := out.Close()
-		if err != nil {
-			msg := fmt.Sprintf(common.ErrorTemplateIo, err)
-			common.LogErrorf(msg)
-			fmt.Println(msg)
-			os.Exit(common.EXIT_CODE_IO_ERROR)
-		}
-	}(out)
+	defer common.CloseFile(out)
 
 	// --- process IN line by line ------
 	// inBlockComment := false
@@ -119,26 +101,27 @@ func convertFile(inputFilePath string) error {
 				// remember the package name
 				packageName = pkg
 			}
-		}
-
-		// 3. Open package resource files (RES) for append
-		resourceFilePath := filepath.Join(outputDir, fmt.Sprintf("%s%s", packageName, common.ResourceFileExtension))
-		if res, err = common.OpenFileForAppend(resourceFilePath); err != nil {
-			return err
-		}
-		defer func(res *os.File) {
-			common.LogDebugf(common.LogTemplateFileClose, res.Name())
-			err := res.Close()
-			if err != nil {
-				msg := fmt.Sprintf(common.ErrorTemplateIo, err)
-				common.LogErrorf(msg)
-				fmt.Println(msg)
-				os.Exit(common.EXIT_CODE_IO_ERROR)
+			// 3. Open package resource files (RES) for append
+			resourceFilePath := filepath.Join(outputDir, fmt.Sprintf("%s%s", packageName, common.ResourceFileExtension))
+			if res, err = common.OpenFileForAppend(resourceFilePath); err != nil {
+				return err
 			}
-		}(res)
-		res.WriteString("hello\n")
+			defer common.CloseFile(res)
+		}
 
 		// 4. Identify string literals
+		literals := extractStringLiterals(semanticLine)
+		if len(literals) != 0 {
+			for _, literal := range literals {
+				common.LogDebugf(common.LogTemplateProcessingLiteral, literal)
+				if _, err = res.WriteString(fmt.Sprintf("%s\n", literal)); err != nil {
+					msg := fmt.Sprintf(common.ErrorTemplateIo, err)
+					common.LogErrorf(msg)
+					fmt.Println(msg)
+					return err
+				}
+			}
+		}
 
 		// We must throw an error if we don't know the package name and have the pkg resource file open
 

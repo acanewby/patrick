@@ -2,7 +2,6 @@ package patrick
 
 import (
 	"github.com/acanewby/patrick/internal/common"
-	"strings"
 )
 
 func constructConfig() common.Config {
@@ -13,7 +12,7 @@ func constructConfig() common.Config {
 		LogLevel:                   logLevel,
 		PackageIdentifier:          packageIdentifier,
 		ResourceFileDelimiter:      resourceFileDelimiter,
-		StringDelimiters:           strings.Split(stringDelimiters, ","),
+		StringDelimiter:            stringDelimiter,
 		SingleLineCommentDelimiter: singleCommentDelimiter,
 		BlockCommentBeginDelimiter: blockCommentBeginDelimiter,
 		BlockCommentEndDelimiter:   blockCommentEndDelimiter,

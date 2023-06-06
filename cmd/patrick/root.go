@@ -23,7 +23,8 @@ var rootCmd = &cobra.Command{
 	Use:     "patrick",
 	Version: version,
 	Short:   "A utility to extract string literals from source code",
-	Long: `patrick is a software engineering utility that assists with application globalization/localization.
+	Long: `
+patrick is a software engineering utility that assists with application globalization/localization.
 
 It parses specified collections of source code files and identifies string literals, which it then tokenizes,
 producing tokenized source files and associated resource data files, suitable for most resource management approaches.`,
@@ -44,7 +45,7 @@ func init() {
 
 	var err error
 
-	rootCmd.PersistentFlags().StringVarP(&logLevel, common.FlagLogLevel, "", "", "log level (debug,info,warn,error,fatal)")
+	rootCmd.PersistentFlags().StringVarP(&logLevel, common.FlagLogLevel, "", "info", "log level (debug,info,warn,error,fatal)")
 
 	rootCmd.PersistentFlags().StringVarP(&excludedNamesFile, common.FlagExcludeFiles, "", "", "file containing base filenames to exclude - one per line")
 
