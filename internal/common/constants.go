@@ -15,6 +15,8 @@ const (
 
 	ResourceFileExtension = ".resource"
 
+	EnumUndefined = "ENUM_UNDEFINED"
+
 	FlagLogLevel                   = "logLevel"
 	FlagInputDir                   = "inputDir"
 	FlagOutputDir                  = "outputDir"
@@ -42,13 +44,14 @@ const (
 
 	UiTemplateDirCollision = "Directory collision: %s overlaps with %s"
 
-	ErrorTemplateInvocation            = "invocation error: [%v]"
-	ErrorTemplateUndeterminedExecution = "undetermined execution error: [%v]"
-	ErrorTemplateIo                    = "I/O error: [%v]"
-	ErrorTemplateFileRead              = "error reading file: [%v]"
-	ErrorTemplateFileWrite             = "error writing file: [%v]"
-	ErrorTemplateParseError            = "parse error: [%+v]"
-	ErrorTemplateTraverserExecution    = "error executing traverser: [%v]"
+	ErrorTemplateInvocation                 = "invocation error: [%v]"
+	ErrorTemplateUndeterminedExecution      = "undetermined execution error: [%v]"
+	ErrorTemplateIo                         = "I/O error: [%v]"
+	ErrorTemplateFileRead                   = "error reading file: [%v]"
+	ErrorTemplateFileWrite                  = "error writing file: [%v]"
+	ErrorTemplateParseError                 = "parse error: [%+v]"
+	ErrorTemplateTraverserExecution         = "error executing traverser: [%v]"
+	ErrorTemplateFailDetermineNextCodeState = "could not determine next code state: prev state:[%s]  line:[%s]"
 
 	LogTemplateCheckDirectoryCollision = "checking for directory collision: [%s: %s vs. %s: %s]"
 	LogPrimaryDir                      = "primary directory"
@@ -62,6 +65,7 @@ const (
 	LogTemplateDelimiterDetected       = "delimiter detected : [%s]"
 	LogTemplateDelimiterPosition       = "delimiter detected at position: [%s -> %d]"
 	LogTemplateLiteralsDetected        = "literals detected: [%+v]"
+	LogLiteralsNotDetected             = "no literals detected"
 	LogTemplateProcessingLiteral       = "processing literal: [%s]"
 	LogTemplatePackage                 = "identified package: [%s]"
 	LogTemplateFileOpen                = "opening file: [%s]"
@@ -73,4 +77,5 @@ const (
 	LogTemplateSettingLogLevel         = "setting log level: [%v]"
 	LogTemplateSetLogLevel             = "set log level: [%v]"
 	LogTemplateDirectoryExist          = "path: [%s]  is directory: [%t]"
+	LogTemplateShouldParse             = "code state: [%s -> %s], should parse: [%t]"
 )

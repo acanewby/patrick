@@ -25,13 +25,13 @@ func TestMain(m *testing.M) {
 func setup() error {
 
 	common.SetConfig(common.Config{
-		InputDir:                   "/Users/Anewby/scratch/patrick/input",
-		OutputDir:                  "/Users/Anewby/scratch/patrick/output",
-		ExcludeFile:                "/Users/Anewby/scratch/patrick/exclude.list",
+		InputDir:                   "/Users/Anewby/Dropbox/scratch/patrick/input",
+		OutputDir:                  "/Users/Anewby/Dropbox/scratch/patrick/output",
+		ExcludeFile:                "/Users/Anewby/Dropbox/scratch/patrick/exclude.list",
 		LogLevel:                   "debug",
 		PackageIdentifier:          "package",
 		ResourceFileDelimiter:      "|",
-		StringDelimiters:           []string{"\"", "'"},
+		StringDelimiter:            "\"",
 		SingleLineCommentDelimiter: "//",
 		BlockCommentBeginDelimiter: "/*",
 		BlockCommentEndDelimiter:   "*/",

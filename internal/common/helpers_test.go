@@ -49,11 +49,11 @@ type directoryCollisionTest struct {
 func TestDirectoryCollisionTableDriven(t *testing.T) {
 
 	// Defining the tests
-	const notADir = "/Users/Anewby/scratch/patrick/not-a-directory"
-	const goodInputDir = "/Users/Anewby/scratch/patrick/input"
-	const goodOutputDir = "/Users/Anewby/scratch/patrick/output"
-	const childOutputDir = "/Users/Anewby/scratch/patrick/input/outputChild"
-	const nonExistentDir = "/Users/Anewby/scratch/patrick/nope"
+	const notADir = "/Users/Anewby/Dropbox/scratch/patrick/not-a-directory"
+	const goodInputDir = "/Users/Anewby/Dropbox/scratch/patrick/input"
+	const goodOutputDir = "/Users/Anewby/Dropbox/scratch/patrick/output"
+	const childOutputDir = "/Users/Anewby/Dropbox/scratch/patrick/input/outputChild"
+	const nonExistentDir = "/Users/Anewby/Dropbox/scratch/patrick/nope"
 	var tests = []directoryCollisionTest{
 		// the table itself
 		{"directory does not exist", goodInputDir, nonExistentDir, false, "stat " + nonExistentDir + ": no such file or directory"},

@@ -24,13 +24,13 @@ func TestMain(m *testing.M) {
 func setup() error {
 
 	SetConfig(Config{
-		InputDir:                   "/Users/Anewby/scratch/patrick/input",
-		OutputDir:                  "/Users/Anewby/scratch/patrick/output",
-		ExcludeFile:                "/Users/Anewby/scratch/patrick/exclude.list",
+		InputDir:                   "/Users/Anewby/Dropbox/scratch/patrick/input",
+		OutputDir:                  "/Users/Anewby/Dropbox/patrick/scratch/output",
+		ExcludeFile:                "/Users/Anewby/Dropbox/patrick/scratch/exclude.list",
 		LogLevel:                   "debug",
 		PackageIdentifier:          "package",
 		ResourceFileDelimiter:      "|",
-		StringDelimiters:           []string{"\"", "'"},
+		StringDelimiter:            "\"",
 		SingleLineCommentDelimiter: "//",
 		BlockCommentBeginDelimiter: "/*",
 		BlockCommentEndDelimiter:   "*/",
