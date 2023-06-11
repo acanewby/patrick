@@ -6,14 +6,24 @@ package common
 type traverseWorker func(string) error
 
 type Config struct {
-	InputDir                   string
-	OutputDir                  string
-	ExcludeFile                string
-	LogLevel                   string
+	InputDir              string
+	OutputDir             string
+	ExcludeFile           string
+	LogLevel              string
+	ResourceFileDelimiter string
+	LanguageConfig        LanguageConfig
+}
+
+type LanguageConfig struct {
 	PackageIdentifier          string
-	ResourceFileDelimiter      string
 	StringDelimiter            string
 	SingleLineCommentDelimiter string
 	BlockCommentBeginDelimiter string
 	BlockCommentEndDelimiter   string
+	ImportKeyword              string
+	ImportBlockBegin           string
+	ImportBlockEnd             string
+	ConstKeyword               string
+	ConstBlockBegin            string
+	ConstBlockEnd              string
 }

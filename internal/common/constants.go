@@ -41,6 +41,10 @@ const (
 	UiTemplateSingleLineDelimiter        = "Single line comment delimiter : %s"
 	UiTemplateBlockCommentBeginDelimiter = "Block comment begin delimiter : %s"
 	UiTemplateBlockCommentEndDelimiter   = "Block comment end delimiter   : %s"
+	UiTemplateImportKeyword              = "Import keyword                : %s"
+	UiTemplateImportBlockDelimiters      = "Import block delimiters       : %s ... %s"
+	UiTemplateConstKeyword               = "Const keyword                 : %s"
+	UiTemplateConstBlockDelimiters       = "Const block delimiters        : %s ... %s"
 
 	UiTemplateDirCollision = "Directory collision: %s overlaps with %s"
 
@@ -54,6 +58,8 @@ const (
 	ErrorTemplateFailDetermineNextCodeState = "could not determine next code state: prev state:[%s]  line:[%s]"
 
 	LogTemplateCheckDirectoryCollision = "checking for directory collision: [%s: %s vs. %s: %s]"
+	LogTemplateExclusions              = "exclude files: [%+v]"
+	LogTemplateTextFileContents        = "text file contents: [%+v]"
 	LogPrimaryDir                      = "primary directory"
 	LogSecondaryDir                    = "secondary directory"
 	LogTemplatePathsMatch              = "paths match: [%s]"
@@ -68,6 +74,7 @@ const (
 	LogLiteralsNotDetected             = "no literals detected"
 	LogTemplateProcessingLiteral       = "processing literal: [%s]"
 	LogTemplatePackage                 = "identified package: [%s]"
+	LogTemplateDirCreate               = "creating directory: [%s]"
 	LogTemplateFileOpen                = "opening file: [%s]"
 	LogTemplateFileClose               = "closing file: [%s]"
 	LogTemplateFileOutput              = "outputting file: [%s]"

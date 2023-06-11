@@ -10,6 +10,7 @@ const (
 	onImportLine
 	inConstBlock
 	onConstLine
+	onPackageLine
 	onEmptyLine
 )
 
@@ -20,6 +21,7 @@ const (
 	InCodeStateConstBlock   = "In const block"
 	OnCodeStateImportLine   = "On import line"
 	OnCodeStateConstLine    = "On const line"
+	OnCodeStatePackageLine  = "On package line"
 	OnCodeStateEmptyLine    = "On empty line"
 )
 
@@ -42,16 +44,10 @@ func (typ codeState) String() string {
 		translation = OnCodeStateConstLine
 	case onEmptyLine:
 		translation = OnCodeStateEmptyLine
+	case onPackageLine:
+		translation = OnCodeStatePackageLine
 	default:
 		translation = common.EnumUndefined
 	}
 	return translation
 }
-
-const (
-	importKeyword       = "import"
-	importBlockBegin    = importKeyword + " ("
-	constKeyword        = "const"
-	constBlockBegin     = constKeyword + " ("
-	importConstBlockEnd = ")"
-)

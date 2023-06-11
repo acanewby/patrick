@@ -56,13 +56,15 @@ func GetTextFileContents(fileName string) ([]string, error) {
 	var file *os.File
 	var contents []string
 
-	LogInfof(LogTemplateFileOpen, fileName)
+	LogDebugf(LogTemplateFileOpen, fileName)
 
 	if file, err = os.Open(fileName); err != nil {
-		LogErrorf(ErrorTemplateFileRead, err)
+		msg := fmt.Sprintf(ErrorTemplateFileRead, err)
+		LogErrorf(msg)
+		fmt.Println(msg)
 		os.Exit(EXIT_CODE_IO_ERROR)
 	}
-	defer file.Close()
+	defer CloseFile(file)
 
 	fileScanner := bufio.NewScanner(file)
 
@@ -74,6 +76,7 @@ func GetTextFileContents(fileName string) ([]string, error) {
 		contents = append(contents, line)
 	}
 
+	LogDebugf(LogTemplateTextFileContents, contents)
 	return contents, nil
 }
 
@@ -97,6 +100,7 @@ func IsDirectory(path string) (bool, error) {
 }
 
 func MkDirP(path string) error {
+	LogDebugf(LogTemplateDirCreate, path)
 	if err := os.MkdirAll(path, os.ModePerm); err != nil {
 		return err
 	}
@@ -224,7 +228,7 @@ func OpenFileForRead(path string) (*os.File, error) {
 		in  *os.File
 		err error
 	)
-	LogInfof(LogTemplateFileOpen, path)
+	LogDebugf(LogTemplateFileOpen, path)
 	if in, err = os.Open(path); err != nil {
 		LogErrorf(ErrorTemplateFileRead, err)
 		return nil, err
@@ -232,12 +236,13 @@ func OpenFileForRead(path string) (*os.File, error) {
 	return in, nil
 }
 
-func OpenFileForOverwrite(outputPath string) (*os.File, error) {
+func OpenFileForOverwrite(path string) (*os.File, error) {
 	var (
 		out *os.File
 		err error
 	)
-	if out, err = os.Create(outputPath); err != nil {
+	LogDebugf(LogTemplateFileOpen, path)
+	if out, err = os.Create(path); err != nil {
 		LogErrorf(ErrorTemplateFileWrite, err)
 		return nil, err
 	}
@@ -245,12 +250,13 @@ func OpenFileForOverwrite(outputPath string) (*os.File, error) {
 	return out, nil
 }
 
-func OpenFileForAppend(outputPath string) (*os.File, error) {
+func OpenFileForAppend(path string) (*os.File, error) {
 	var (
 		out *os.File
 		err error
 	)
-	if out, err = os.OpenFile(outputPath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644); err != nil {
+	LogDebugf(LogTemplateFileOpen, path)
+	if out, err = os.OpenFile(path, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644); err != nil {
 		LogErrorf(ErrorTemplateFileWrite, err)
 		return nil, err
 	}

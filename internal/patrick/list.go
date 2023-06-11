@@ -15,7 +15,9 @@ func List() {
 
 	// Process the targeted files as a slice
 	if err = common.TraverseFilteredDirectoryTree(cfg.InputDir, excludeList, listFilename); err != nil {
-		common.LogErrorf(common.ErrorTemplateTraverserExecution, err)
+		msg := fmt.Sprintf(common.ErrorTemplateTraverserExecution, err)
+		common.LogErrorf(msg)
+		fmt.Println(msg)
 		os.Exit(common.EXIT_CODER_TRAVERSER_EXECUTION)
 
 	}

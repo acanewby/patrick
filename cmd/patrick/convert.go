@@ -12,13 +12,8 @@ import (
 )
 
 var (
-	outputDir                  string
-	packageIdentifier          string
-	resourceFileDelimiter      string
-	stringDelimiter            string
-	singleCommentDelimiter     string
-	blockCommentBeginDelimiter string
-	blockCommentEndDelimiter   string
+	outputDir             string
+	resourceFileDelimiter string
 )
 
 // convertCmd represents the convert command
@@ -42,12 +37,14 @@ func init() {
 	var err error
 
 	convertCmd.Flags().StringVarP(&outputDir, common.FlagOutputDir, "", "", "output directory")
-	convertCmd.Flags().StringVarP(&packageIdentifier, common.FlagPackageIdentifier, "", "package", "keyword identifying package for this language system")
 	convertCmd.Flags().StringVarP(&resourceFileDelimiter, common.FlagResourceFileDelimiter, "", "|", "delimiter separating resource id and value in resource file")
-	convertCmd.Flags().StringVarP(&stringDelimiter, common.FlagStringDelimiter, "", "\"", "string delimiter used by this language system")
-	convertCmd.Flags().StringVarP(&singleCommentDelimiter, common.FlagSingleCommentDelimiter, "", "//", "single-line comment delimiter used by this language system")
-	convertCmd.Flags().StringVarP(&blockCommentBeginDelimiter, common.FlagBlockCommentDelimiterBegin, "", "/*", "block comment begin delimiter used by this language system")
-	convertCmd.Flags().StringVarP(&blockCommentEndDelimiter, common.FlagBlockCommentDelimiterEnd, "", "*/", "block comment end delimiter used by this language system")
+
+	// Make these flags if we ever make a non Go-specific version of patrick
+	//convertCmd.Flags().StringVarP(&packageIdentifier, common.FlagPackageIdentifier, "", "package", "keyword identifying package for this language system")
+	//convertCmd.Flags().StringVarP(&stringDelimiter, common.FlagStringDelimiter, "", "\"", "string delimiter used by this language system")
+	//convertCmd.Flags().StringVarP(&singleCommentDelimiter, common.FlagSingleCommentDelimiter, "", "//", "single-line comment delimiter used by this language system")
+	//convertCmd.Flags().StringVarP(&blockCommentBeginDelimiter, common.FlagBlockCommentDelimiterBegin, "", "/*", "block comment begin delimiter used by this language system")
+	//convertCmd.Flags().StringVarP(&blockCommentEndDelimiter, common.FlagBlockCommentDelimiterEnd, "", "*/", "block comment end delimiter used by this language system")
 
 	if err = convertCmd.MarkFlagDirname(common.FlagOutputDir); err != nil {
 		fmt.Println(fmt.Sprintf(common.ErrorTemplateInvocation, err))

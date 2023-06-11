@@ -1,6 +1,7 @@
 package common
 
 import (
+	"fmt"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"os"
@@ -45,12 +46,14 @@ func SetLogLevel(level string) {
 	var err error
 
 	if l, err = zap.ParseAtomicLevel(strings.ToLower(level)); err != nil {
-		LogErrorf(ErrorTemplateParseError, err)
+		msg := fmt.Sprintf(ErrorTemplateParseError, err)
+		LogErrorf(msg)
+		fmt.Println(msg)
 		os.Exit(EXIT_CODE_CONFIGURATION_ERROR)
 	} else {
-		LogInfof(LogTemplateSettingLogLevel, l)
+		LogDebugf(LogTemplateSettingLogLevel, l)
 		logLevel.SetLevel(l.Level())
-		LogInfof(LogTemplateSetLogLevel, l)
+		LogDebugf(LogTemplateSetLogLevel, l)
 	}
 
 }

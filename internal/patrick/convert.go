@@ -22,15 +22,19 @@ func Convert() {
 	// Output should not be the same as input, or a child of input
 	isCollision, err = common.DirectoryCollision(cfg.InputDir, cfg.OutputDir)
 	if err != nil {
+		fmt.Println(err.Error())
 		os.Exit(common.EXIT_CODE_UNDETERMINED_ERROR)
 	}
 	if isCollision {
+		fmt.Println(fmt.Sprintf(common.LogTemplatePathCollision, cfg.InputDir, cfg.OutputDir))
 		os.Exit(common.EXIT_CODE_CONFIGURATION_ERROR)
 	}
 
 	// Process the targeted files as a slice
 	if err = common.TraverseFilteredDirectoryTree(cfg.InputDir, excludeList, convertFile); err != nil {
-		common.LogErrorf(common.ErrorTemplateTraverserExecution, err)
+		msg := fmt.Sprintf(common.ErrorTemplateTraverserExecution, err)
+		common.LogErrorf(msg)
+		fmt.Println(msg)
 		os.Exit(common.EXIT_CODER_TRAVERSER_EXECUTION)
 	}
 
@@ -87,7 +91,7 @@ func convertFile(inputFilePath string) error {
 
 	for fileScanner.Scan() {
 		line := fileScanner.Text()
-		common.LogDebugf(common.LogTemplateFileReadLine, line)
+		common.LogInfof(common.LogTemplateFileReadLine, line)
 
 		// Trim whitespace and eliminate any trailing comment
 		semanticLine, blockCommentBegan, blockCommentEnded := semanticLine(line)
@@ -95,9 +99,9 @@ func convertFile(inputFilePath string) error {
 		// 2. Identify package if we don't already know
 		if packageName == "" {
 			// Can we id the package
-			if strings.HasPrefix(semanticLine, cfg.PackageIdentifier) {
+			if strings.HasPrefix(semanticLine, cfg.LanguageConfig.PackageIdentifier) {
 				// strip off the identifier
-				pkg := strings.TrimSpace(strings.Replace(semanticLine, cfg.PackageIdentifier, "", 1))
+				pkg := strings.TrimSpace(strings.Replace(semanticLine, cfg.LanguageConfig.PackageIdentifier, "", 1))
 				common.LogInfof(common.LogTemplatePackage, pkg)
 				// remember the package name
 				packageName = pkg
@@ -182,10 +186,10 @@ func semanticLine(line string) (string, bool, bool) {
 			if blockEndFound {
 				if blockEndIdx > blockBeginIdx {
 					// Remove the block comment somewhere in the middle of this line
-					examination = examination[0:blockBeginIdx] + examination[blockEndIdx+len(cfg.BlockCommentEndDelimiter):len(examination)]
+					examination = examination[0:blockBeginIdx] + examination[blockEndIdx+len(cfg.LanguageConfig.BlockCommentEndDelimiter):len(examination)]
 				} else {
 					// Extract the code somewhere in the middle of this line
-					examination = examination[blockEndIdx+len(cfg.BlockCommentEndDelimiter) : blockBeginIdx]
+					examination = examination[blockEndIdx+len(cfg.LanguageConfig.BlockCommentEndDelimiter) : blockBeginIdx]
 				}
 			} else {
 				// Treat as single-line comment
@@ -199,10 +203,10 @@ func semanticLine(line string) (string, bool, bool) {
 		if blockEndFound {
 			if singleLineFound && singleLineIdx > blockEndIdx {
 				// Extract the code somewhere in the middle of this line
-				examination = examination[blockEndIdx+len(cfg.BlockCommentEndDelimiter) : singleLineIdx]
+				examination = examination[blockEndIdx+len(cfg.LanguageConfig.BlockCommentEndDelimiter) : singleLineIdx]
 			} else {
 				// Get the code after the block end comment delimiter
-				examination = examination[blockEndIdx+len(cfg.BlockCommentEndDelimiter) : len(examination)]
+				examination = examination[blockEndIdx+len(cfg.LanguageConfig.BlockCommentEndDelimiter) : len(examination)]
 			}
 			blockCommentEnded = true
 		}
@@ -211,13 +215,13 @@ func semanticLine(line string) (string, bool, bool) {
 		singleLineFound, blockBeginFound, blockEndFound, singleLineIdx, blockBeginIdx, blockEndIdx = checkForCommentDelimiters(examination, cfg)
 		if singleLineFound && (!blockBeginFound || singleLineIdx < blockBeginIdx) && (!blockEndFound || singleLineIdx < blockEndIdx) {
 			// Single-line comment active
-			common.LogDebugf(common.LogTemplateDelimiterPosition, cfg.SingleLineCommentDelimiter, singleLineIdx)
+			common.LogDebugf(common.LogTemplateDelimiterPosition, cfg.LanguageConfig.SingleLineCommentDelimiter, singleLineIdx)
 			// Get the code before the single-line comment delimiter
 			examination = examination[0:singleLineIdx]
 		}
 
 		examination = common.ConsolidateWhitespace(examination)
-		common.LogDebugf(common.LogTemplateFileTrimmedLine, examination)
+		common.LogInfof(common.LogTemplateFileTrimmedLine, examination)
 
 		// Did we trim anything?
 		if startLen == len(examination) {
@@ -235,17 +239,17 @@ func checkForCommentDelimiters(examination string, cfg common.Config) (bool, boo
 	blockEndFound := false
 
 	// Look for comment delimiters
-	singleLineIdx := strings.Index(examination, cfg.SingleLineCommentDelimiter)
+	singleLineIdx := strings.Index(examination, cfg.LanguageConfig.SingleLineCommentDelimiter)
 	if singleLineIdx > -1 {
 		singleLineFound = true
 	}
 
-	blockBeginIdx := strings.Index(examination, cfg.BlockCommentBeginDelimiter)
+	blockBeginIdx := strings.Index(examination, cfg.LanguageConfig.BlockCommentBeginDelimiter)
 	if blockBeginIdx > -1 {
 		blockBeginFound = true
 	}
 
-	blockEndIdx := strings.Index(examination, cfg.BlockCommentEndDelimiter)
+	blockEndIdx := strings.Index(examination, cfg.LanguageConfig.BlockCommentEndDelimiter)
 	if blockEndIdx > -1 {
 		blockEndFound = true
 	}
@@ -255,6 +259,7 @@ func checkForCommentDelimiters(examination string, cfg common.Config) (bool, boo
 func updateCodeState(currentState codeState, line string, blockCommentBegan bool, blockCommentEnded bool) codeState {
 
 	var newState codeState
+	cfg := common.GetConfig()
 
 	switch {
 	case line == "":
@@ -263,22 +268,26 @@ func updateCodeState(currentState codeState, line string, blockCommentBegan bool
 		newState = inCommentBlock
 	case blockCommentEnded:
 		newState = inNormalCode
-	case line == constBlockBegin || (currentState == inConstBlock && line != importConstBlockEnd):
+	case line == cfg.LanguageConfig.ConstBlockBegin || (currentState == inConstBlock && line != cfg.LanguageConfig.ConstBlockEnd):
 		newState = inConstBlock
-	case line == importBlockBegin || (currentState == inImportBlock && line != importConstBlockEnd):
+	case line == cfg.LanguageConfig.ImportBlockBegin || (currentState == inImportBlock && line != cfg.LanguageConfig.ImportBlockEnd):
 		newState = inImportBlock
-	case line == importConstBlockEnd && (currentState == inConstBlock || currentState == inImportBlock):
+	case line == cfg.LanguageConfig.ImportBlockEnd && currentState == inImportBlock:
 		newState = inNormalCode
-	case strings.HasPrefix(line, importKeyword):
+	case line == cfg.LanguageConfig.ConstBlockEnd && currentState == inConstBlock:
+		newState = inNormalCode
+	case strings.HasPrefix(line, cfg.LanguageConfig.ImportKeyword):
 		newState = onImportLine
-	case strings.HasPrefix(line, constKeyword):
+	case strings.HasPrefix(line, cfg.LanguageConfig.ConstKeyword):
 		newState = onConstLine
+	case strings.HasPrefix(line, cfg.LanguageConfig.PackageIdentifier):
+		newState = onPackageLine
 	default:
 		newState = inNormalCode
 	}
 
 	// Report new state
-	common.LogInfof(newState.String())
+	common.LogDebugf(newState.String())
 	return newState
 }
 
@@ -287,13 +296,14 @@ func shouldParse(was codeState, is codeState) bool {
 	var parse bool
 
 	/*                   IS
-		                     inNormalCode    inCommentBlock    inImportBlock    inConstBlock    onImportLine    onConstLine
-		WAS	inNormalCode          T                 T                 F               F               F               F
-			inCommentBlock        T                 F                 F               F               F               F
-			inImportBlock         T                 T                 F               F               F               F
-			inConstBlock          T                 T                 F               F               F               F
-	        onImportLine          T                 T                 F               F               F               F
-	        onConstLine           T                 T                 F               F               F               F
+			                     inNormalCode    inCommentBlock    inImportBlock    inConstBlock    onImportLine    onConstLine    onPackageLine
+			WAS	inNormalCode          T                 T                 F               F               F               F               F
+				inCommentBlock        T                 F                 F               F               F               F               F
+				inImportBlock         T                 T                 F               F               F               F               F
+				inConstBlock          T                 T                 F               F               F               F               F
+		        onImportLine          T                 T                 F               F               F               F               F
+		        onConstLine           T                 T                 F               F               F               F               F
+	            onPackageLine         T                 T                 F               F               F               F               F
 	*/
 
 	// Skip if the line is empty
@@ -305,7 +315,7 @@ func shouldParse(was codeState, is codeState) bool {
 			parse = true
 		}
 
-		if is == onImportLine || is == onConstLine {
+		if is == onImportLine || is == onConstLine || is == onPackageLine {
 			// regardless of what we had before, we are now in part of the code we should not touch
 			parse = false
 		}
@@ -326,6 +336,6 @@ func shouldParse(was codeState, is codeState) bool {
 		}
 	}
 
-	common.LogDebugf(common.LogTemplateShouldParse, was, is, parse)
+	common.LogInfof(common.LogTemplateShouldParse, was, is, parse)
 	return parse
 }
