@@ -39,6 +39,7 @@ func dumpConfig(cfg common.Config) {
 
 	fmt.Println(fmt.Sprintf(common.UiTemplateInputDir, cfg.InputDir))
 	fmt.Println(fmt.Sprintf(common.UiTemplateOutputDir, cfg.OutputDir))
+	fmt.Println(fmt.Sprintf(common.UiTemplateOverwriteOutput, cfg.OverwriteOutput))
 	fmt.Println(fmt.Sprintf(common.UiTemplateExcludesFile, cfg.ExcludeFile))
 	fmt.Println(fmt.Sprintf(common.UiTemplateLogLevel, cfg.LogLevel))
 	fmt.Println(fmt.Sprintf(common.UiTemplatePackageidentifier, cfg.LanguageConfig.PackageIdentifier))

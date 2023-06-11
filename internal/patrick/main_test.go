@@ -25,16 +25,12 @@ func TestMain(m *testing.M) {
 func setup() error {
 
 	common.SetConfig(common.Config{
-		InputDir:                   "/Users/Anewby/Dropbox/scratch/patrick/input",
-		OutputDir:                  "/Users/Anewby/Dropbox/scratch/patrick/output",
-		ExcludeFile:                "/Users/Anewby/Dropbox/scratch/patrick/exclude.list",
-		LogLevel:                   "debug",
-		PackageIdentifier:          "package",
-		ResourceFileDelimiter:      "|",
-		StringDelimiter:            "\"",
-		SingleLineCommentDelimiter: "//",
-		BlockCommentBeginDelimiter: "/*",
-		BlockCommentEndDelimiter:   "*/",
+		InputDir:              "/Users/Anewby/Dropbox/scratch/patrick/input",
+		OutputDir:             "/Users/Anewby/Dropbox/scratch/patrick/output",
+		ExcludeFile:           "/Users/Anewby/Dropbox/scratch/patrick/exclude.list",
+		LogLevel:              "debug",
+		ResourceFileDelimiter: "|",
+		LanguageConfig:        common.GoLanguageConfig(),
 	})
 
 	common.LogInfof("running tests: %s", time.Now())

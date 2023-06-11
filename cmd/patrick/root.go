@@ -45,17 +45,18 @@ func init() {
 
 	var err error
 
+	// log level
 	rootCmd.PersistentFlags().StringVarP(&logLevel, common.FlagLogLevel, "", "info", "log level (debug,info,warn,error,fatal)")
 
+	// exclusions
 	rootCmd.PersistentFlags().StringVarP(&excludedNamesFile, common.FlagExcludeFiles, "", "", "file containing base filenames to exclude - one per line")
-
 	if err = rootCmd.MarkPersistentFlagFilename(common.FlagExcludeFiles); err != nil {
 		fmt.Println(fmt.Sprintf(common.ErrorTemplateInvocation, err))
 		os.Exit(common.EXIT_CODE_INVOCATION_ERROR)
 	}
 
+	// input dir
 	rootCmd.PersistentFlags().StringVarP(&inputDir, common.FlagInputDir, "", "", "input directory")
-
 	if err = rootCmd.MarkPersistentFlagDirname(common.FlagInputDir); err != nil {
 		fmt.Println(fmt.Sprintf(common.ErrorTemplateInvocation, err))
 		os.Exit(common.EXIT_CODE_INVOCATION_ERROR)

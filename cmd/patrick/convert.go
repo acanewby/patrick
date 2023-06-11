@@ -14,6 +14,7 @@ import (
 var (
 	outputDir             string
 	resourceFileDelimiter string
+	overwriteOutput       bool
 )
 
 // convertCmd represents the convert command
@@ -38,6 +39,7 @@ func init() {
 
 	convertCmd.Flags().StringVarP(&outputDir, common.FlagOutputDir, "", "", "output directory")
 	convertCmd.Flags().StringVarP(&resourceFileDelimiter, common.FlagResourceFileDelimiter, "", "|", "delimiter separating resource id and value in resource file")
+	convertCmd.Flags().BoolVarP(&overwriteOutput, common.FlagOverwriteOutput, "", false, "replace contents of outputDir")
 
 	// Make these flags if we ever make a non Go-specific version of patrick
 	//convertCmd.Flags().StringVarP(&packageIdentifier, common.FlagPackageIdentifier, "", "package", "keyword identifying package for this language system")

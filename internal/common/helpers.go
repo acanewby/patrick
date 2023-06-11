@@ -80,23 +80,30 @@ func GetTextFileContents(fileName string) ([]string, error) {
 	return contents, nil
 }
 
+// IsDirectory tests the supplied path to see if it is a directory
+// An error is returned if there is an I/O failure or the path is a file
 func IsDirectory(path string) (bool, error) {
 
-	isDir := false
-
 	info, err := os.Stat(path)
+	var dirExists bool
 
+	// bale if we have an I/O error
 	if err != nil {
 		LogErrorf(ErrorTemplateIo, err)
 		return false, err
 	}
 
-	if info.IsDir() {
-		isDir = true
+	if !info.IsDir() {
+		msg := fmt.Sprintf(LogTemplateFileNotDirectory, path)
+		dirExists = false
+		err = errors.New(msg)
+		LogErrorf(msg)
+	} else {
+		dirExists = true
+		LogDebugf(fmt.Sprintf(LogTemplateDirectoryExist, path, dirExists))
 	}
 
-	LogDebugf(LogTemplateDirectoryExist, path, isDir)
-	return isDir, nil
+	return dirExists, err
 }
 
 func MkDirP(path string) error {
@@ -105,6 +112,15 @@ func MkDirP(path string) error {
 		return err
 	}
 	LogDebugf(LogTemplateDirectoryExist, path, true)
+	return nil
+}
+
+func RmDirP(path string) error {
+	LogDebugf(LogTemplateDirRemove, path)
+	if err := os.RemoveAll(path); err != nil {
+		return err
+	}
+	LogDebugf(LogTemplateDirectoryExist, path, false)
 	return nil
 }
 

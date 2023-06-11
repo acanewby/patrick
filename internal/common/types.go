@@ -8,6 +8,7 @@ type traverseWorker func(string) error
 type Config struct {
 	InputDir              string
 	OutputDir             string
+	OverwriteOutput       bool
 	ExcludeFile           string
 	LogLevel              string
 	ResourceFileDelimiter string

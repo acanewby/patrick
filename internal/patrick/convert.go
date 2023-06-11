@@ -15,8 +15,9 @@ func Convert() {
 
 	excludeList := setupRun(cfg)
 	var (
-		err         error
-		isCollision bool
+		err             error
+		isCollision     bool
+		outputDirExists bool
 	)
 
 	// Output should not be the same as input, or a child of input
@@ -28,6 +29,36 @@ func Convert() {
 	if isCollision {
 		fmt.Println(fmt.Sprintf(common.LogTemplatePathCollision, cfg.InputDir, cfg.OutputDir))
 		os.Exit(common.EXIT_CODE_CONFIGURATION_ERROR)
+	}
+
+	// Prepare output directory
+	outputDirExists, err = common.IsDirectory(cfg.OutputDir)
+	// bale because we barfed trying to stat the path
+	if err != nil {
+		fmt.Println(err.Error())
+		os.Exit(common.EXIT_CODE_UNDETERMINED_ERROR)
+	}
+	if outputDirExists {
+		if !cfg.OverwriteOutput {
+			// it exists and we can't overwrite it
+			fmt.Println(fmt.Sprintf(common.ErrorTemplateOutputDirAlreadyExists, cfg.OutputDir))
+			os.Exit(common.EXIT_CODE_CONFIGURATION_ERROR)
+		} else {
+			// it exists but we can kill it
+			if err = common.RmDirP(cfg.OutputDir); err != nil {
+				msg := fmt.Sprintf(common.ErrorTemplateIo, err)
+				common.LogErrorf(msg)
+				fmt.Println(msg)
+				os.Exit(common.EXIT_CODE_IO_ERROR)
+			}
+		}
+	}
+	// At this point, the outputdir does not exist, so we must make it
+	if err = common.MkDirP(cfg.OutputDir); err != nil {
+		msg := fmt.Sprintf(common.ErrorTemplateIo, err)
+		common.LogErrorf(msg)
+		fmt.Println(msg)
+		os.Exit(common.EXIT_CODE_IO_ERROR)
 	}
 
 	// Process the targeted files as a slice
@@ -64,7 +95,7 @@ func convertFile(inputFilePath string) error {
 
 	// --- setup ------
 
-	// 0. Open input file (IN) for read (err if fail)
+	// 0a. Open input file (IN) for read (err if fail)
 	if in, err = common.OpenFileForRead(inputFilePath); err != nil {
 		return err
 	}
@@ -131,10 +162,6 @@ func convertFile(inputFilePath string) error {
 					}
 				}
 			}
-
-			// 4a. Assign literal token
-			// 4b. Substitute token for literal in OUT
-			// 4c. Write token and literal to RES
 		} else {
 			// Pass the line straight through as-is
 			if _, err = out.WriteString(line + "\n"); err != nil {

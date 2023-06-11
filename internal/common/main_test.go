@@ -24,16 +24,12 @@ func TestMain(m *testing.M) {
 func setup() error {
 
 	SetConfig(Config{
-		InputDir:                   "/Users/Anewby/Dropbox/scratch/patrick/input",
-		OutputDir:                  "/Users/Anewby/Dropbox/patrick/scratch/output",
-		ExcludeFile:                "/Users/Anewby/Dropbox/patrick/scratch/exclude.list",
-		LogLevel:                   "debug",
-		PackageIdentifier:          "package",
-		ResourceFileDelimiter:      "|",
-		StringDelimiter:            "\"",
-		SingleLineCommentDelimiter: "//",
-		BlockCommentBeginDelimiter: "/*",
-		BlockCommentEndDelimiter:   "*/",
+		InputDir:              "/Users/Anewby/Dropbox/scratch/patrick/input",
+		OutputDir:             "/Users/Anewby/Dropbox/patrick/scratch/output",
+		ExcludeFile:           "/Users/Anewby/Dropbox/patrick/scratch/exclude.list",
+		LogLevel:              "debug",
+		ResourceFileDelimiter: "|",
+		LanguageConfig:        GoLanguageConfig(),
 	})
 
 	LogInfof("running tests: %s", time.Now())

@@ -30,7 +30,81 @@ Sadly, Patrick passed away suddenly in September, 2018.
 * specify resource token prefixes for absolute `"abc = xyz"` and templated `"abc: %s"` literals
 * specify the form of a substitute resource lookup function e.g. `util.Resource(<token goes here>)`
 
-## Command summary
+## Command examples
+
+### General
+
+* Flags for `inputDir` and `outputDir` should be obvious.
+
+* File format for the `excludesFile` is like this (e.g. one unqualified filename per line):
+
+```shell
+resource.go
+resources.go
+types.go
+constants.go
+.DS_Store
+```
+
+`patrick` will ignore any file matching any of the above filenames in the `excludeFiles` file as it traverses the `inputDir` directory tree.
+
+* A log file (`patrick.log`) will be output to the current working directory, with detail level driven by `logLevel`go.
+
+### List
+
+Allows you to get a listing of the files that would be processed.  Useful to test your input directory / exclusions configuration.
+
+```shell
+./patrick list --help                                                                                                                                                                                                                          feature/implement-convert ● ? ↑1
+
+Lists all files that will be targeted for processing, taking into account inclusion and exclusion criteria.
+
+Usage:
+  patrick list [flags]
+
+Flags:
+  -h, --help   help for list
+
+Global Flags:
+      --excludeFiles string   file containing base filenames to exclude - one per line
+      --inputDir string       input directory
+      --logLevel string       log level (debug,info,warn,error,fatal) (default "info")
+```
+
+```shell
+./patrick list --inputDir=/Users/Anewby/Dropbox/scratch/patrick/input --excludeFiles=/Users/Anewby/Dropbox/scratch/patrick/exclude.list                                                                                                        feature/implement-convert ● ? ↑1
+================================================================================
+Input directory               : /Users/Anewby/Dropbox/scratch/patrick/input
+Output directory              : 
+Exclude files                 : /Users/Anewby/Dropbox/scratch/patrick/exclude.list
+Log level                     : info
+Package identifier            : package
+Resource file delimiter       : |
+String delimiter              : "
+Single line comment delimiter : //
+Block comment begin delimiter : /*
+Block comment end delimiter   : */
+Import keyword                : import
+Import block delimiters       : import ( ... )
+Const keyword                 : const
+Const block delimiters        : const ( ... )
+================================================================================
+Files to process
+--------------------------------------------------------------------------------
+Processing file: /Users/Anewby/Dropbox/scratch/patrick/input/config/config.go
+Processing file: /Users/Anewby/Dropbox/scratch/patrick/input/config/defaults.go
+Processing file: /Users/Anewby/Dropbox/scratch/patrick/input/docker/docker.go
+Processing file: /Users/Anewby/Dropbox/scratch/patrick/input/util/smoke.go
+Processing file: /Users/Anewby/Dropbox/scratch/patrick/input/util/util.go
+--------------------------------------------------------------------------------
+```
+
+### Convert
+
+Processes files according to `inputDir` and `excludesFile`, as described above.
+
+It identifies string literals and substitutes them in the output file with tokens recorded in the corresponding package-specific resource file.
+
 
 
 
