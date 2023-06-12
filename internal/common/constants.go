@@ -80,6 +80,7 @@ const (
 	LogTemplateLiteralsDetected        = "literals detected: [%+v]"
 	LogLiteralsNotDetected             = "no literals detected"
 	LogTemplateProcessingLiteral       = "processing literal: [%s]"
+	LogTemplateIgnoringEmptyLiteral    = "ignoring empty literal: [%s]"
 	LogTemplatePackage                 = "identified package: [%s]"
 	LogTemplateDirCreate               = "creating directory: [%s]"
 	LogTemplateDirRemove               = "deleting directory: [%s]"
@@ -96,4 +97,7 @@ const (
 	LogTemplateDirectoryExist          = "path: [%s]  is directory: [%t]"
 	LogTemplateFileExist               = "path: [%s]  is file: [%t]"
 	LogTemplateShouldParse             = "code state: [%s -> %s], should parse: [%t]"
+	LogTemplateResourceLookup          = "looking for resource: [%+v]"
+	LogTemplateResourceFound           = "found resource index: [%d<-%+v]"
+	LogTemplateResourceGenerated       = "generated resource index: [%d<-%+v]"
 )

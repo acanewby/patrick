@@ -15,7 +15,6 @@ func Convert() {
 		err             error
 		isCollision     bool
 		outputDirExists bool
-        inv resourceInventory
 	)
 
 	cfg := common.GetConfig()
@@ -87,7 +86,7 @@ It outputs two files:
   - a converted version of the input file, with system-generated tokens in place of the identified literals
   - a resource file with token:literal mappings
 */
-func convertFile(inputFilePath string, inventory *resourceInventory) error {
+func convertFile(inputFilePath string) error {
 
 	var (
 		err         error
@@ -99,6 +98,7 @@ func convertFile(inputFilePath string, inventory *resourceInventory) error {
 	)
 
 	cfg := common.GetConfig()
+	inv := common.GetResourceInventory()
 
 	fmt.Println(fmt.Sprintf(common.UiTemplateProcessingFile, inputFilePath))
 
@@ -155,18 +155,27 @@ func convertFile(inputFilePath string, inventory *resourceInventory) error {
 			// 4. Identify string literals
 			literals := extractStringLiterals(semanticLine)
 			if len(literals) != 0 {
-				for _, literal := range literals {
-					common.LogDebugf(common.LogTemplateProcessingLiteral, literal)
+				for _, resource := range literals {
 
-					// get the resource token
-                    token :=
+					if resource == "\"\"" {
+						common.LogDebugf(common.LogTemplateIgnoringEmptyLiteral, resource)
+					} else {
 
-					// If it's a new one, write to the resource file
-					if _, err = res.WriteString(fmt.Sprintf("%s\n", literal)); err != nil {
-						msg := fmt.Sprintf(common.ErrorTemplateIo, err)
-						common.LogErrorf(msg)
-						fmt.Println(msg)
-						return err
+						common.LogDebugf(common.LogTemplateProcessingLiteral, resource)
+
+						// get the resource index for this token
+						idx, isNew := inv.GetIndexForResource(packageName, resource)
+
+						// If it's a new one, write to the resource file
+						if isNew {
+							newResource := fmt.Sprintf("%s%s%s", inv.ResourceToken(idx), cfg.ResourceFileDelimiter, resource)
+							if _, err = res.WriteString(newResource + "\n"); err != nil {
+								msg := fmt.Sprintf(common.ErrorTemplateIo, err)
+								common.LogErrorf(msg)
+								fmt.Println(msg)
+								return err
+							}
+						}
 					}
 
 					// Update the code line
