@@ -43,7 +43,12 @@ func dumpConfig(cfg common.Config) {
 	fmt.Println(fmt.Sprintf(common.UiTemplateExcludesFile, cfg.ExcludeFile))
 	fmt.Println(fmt.Sprintf(common.UiTemplateLogLevel, cfg.LogLevel))
 	fmt.Println(fmt.Sprintf(common.UiTemplatePackageidentifier, cfg.LanguageConfig.PackageIdentifier))
+
 	fmt.Println(fmt.Sprintf(common.UiTemplateResourceFileDelimiter, cfg.ResourceFileDelimiter))
+	fmt.Println(fmt.Sprintf(common.UiTemplateResourceIndexStart, cfg.ResourceIndexStart))
+	fmt.Println(fmt.Sprintf(common.UiTemplateResourceIndexZeroPad, cfg.ResourceIndexZeroPad))
+	fmt.Println(fmt.Sprintf(common.UiTemplateResourceTokenPrefix, cfg.ResourceTokenPrefix))
+	fmt.Println(fmt.Sprintf(common.UiTemplateResourceFunctionTemplate, cfg.ResourceFunctionTemplate))
 
 	fmt.Println(fmt.Sprintf(common.UiTemplateStringDelimiter, cfg.LanguageConfig.StringDelimiter))
 

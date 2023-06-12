@@ -8,12 +8,16 @@ import (
 func constructConfig() common.Config {
 
 	return common.Config{
-		InputDir:              inputDir,
-		OutputDir:             outputDir,
-		OverwriteOutput:       overwriteOutput,
-		ExcludeFile:           excludedNamesFile,
-		LogLevel:              logLevel,
-		ResourceFileDelimiter: resourceFileDelimiter,
-		LanguageConfig:        common.GoLanguageConfig(),
+		InputDir:                 inputDir,
+		OutputDir:                outputDir,
+		OverwriteOutput:          overwriteOutput,
+		ExcludeFile:              excludedNamesFile,
+		LogLevel:                 logLevel,
+		ResourceFileDelimiter:    resourceFileDelimiter,
+		ResourceIndexStart:       resourceIndexStart,
+		ResourceIndexZeroPad:     resourceIndexZeroPad,
+		ResourceTokenPrefix:      resourceTokenPrefix,
+		ResourceFunctionTemplate: resourceFunctionTemplate,
+		LanguageConfig:           common.GoLanguageConfig(),
 	}
 }

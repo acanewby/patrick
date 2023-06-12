@@ -11,14 +11,23 @@ import (
 
 func Convert() {
 
-	cfg := common.GetConfig()
-
-	excludeList := setupRun(cfg)
 	var (
 		err             error
 		isCollision     bool
 		outputDirExists bool
+        inv resourceInventory
 	)
+
+	cfg := common.GetConfig()
+	excludeList := setupRun(cfg)
+
+	// Validate resource function template
+	if !strings.Contains(cfg.ResourceFunctionTemplate, common.ResourceFunctionTemplateSubstitutionToken) {
+		msg := fmt.Sprintf(common.ErrorTemplateResourceFunctionMissingSubToken, common.ResourceFunctionTemplateSubstitutionToken, cfg.ResourceFunctionTemplate)
+		common.LogErrorf(msg)
+		fmt.Println(msg)
+		os.Exit(common.EXIT_CODE_CONFIGURATION_ERROR)
+	}
 
 	// Output should not be the same as input, or a child of input
 	isCollision, err = common.DirectoryCollision(cfg.InputDir, cfg.OutputDir)
@@ -78,7 +87,7 @@ It outputs two files:
   - a converted version of the input file, with system-generated tokens in place of the identified literals
   - a resource file with token:literal mappings
 */
-func convertFile(inputFilePath string) error {
+func convertFile(inputFilePath string, inventory *resourceInventory) error {
 
 	var (
 		err         error
@@ -130,13 +139,7 @@ func convertFile(inputFilePath string) error {
 		// 2. Identify package if we don't already know
 		if packageName == "" {
 			// Can we id the package
-			if strings.HasPrefix(semanticLine, cfg.LanguageConfig.PackageIdentifier) {
-				// strip off the identifier
-				pkg := strings.TrimSpace(strings.Replace(semanticLine, cfg.LanguageConfig.PackageIdentifier, "", 1))
-				common.LogInfof(common.LogTemplatePackage, pkg)
-				// remember the package name
-				packageName = pkg
-			}
+			packageName = identifyPackage(semanticLine, cfg)
 			// 3. Open package resource files (RES) for append
 			resourceFilePath := filepath.Join(outputDir, fmt.Sprintf("%s%s", packageName, common.ResourceFileExtension))
 			if res, err = common.OpenFileForAppend(resourceFilePath); err != nil {
@@ -154,25 +157,46 @@ func convertFile(inputFilePath string) error {
 			if len(literals) != 0 {
 				for _, literal := range literals {
 					common.LogDebugf(common.LogTemplateProcessingLiteral, literal)
+
+					// get the resource token
+                    token :=
+
+					// If it's a new one, write to the resource file
 					if _, err = res.WriteString(fmt.Sprintf("%s\n", literal)); err != nil {
 						msg := fmt.Sprintf(common.ErrorTemplateIo, err)
 						common.LogErrorf(msg)
 						fmt.Println(msg)
 						return err
 					}
+
+					// Update the code line
 				}
 			}
-		} else {
-			// Pass the line straight through as-is
-			if _, err = out.WriteString(line + "\n"); err != nil {
-				common.LogErrorf(common.ErrorTemplateIo, err)
-				return err
-			}
+		}
+
+		// Write the line to output
+		if _, err = out.WriteString(line + "\n"); err != nil {
+			common.LogErrorf(common.ErrorTemplateIo, err)
+			return err
 		}
 
 	}
 
 	return nil
+}
+
+func identifyPackage(semanticLine string, cfg common.Config) string {
+
+	packageName := ""
+
+	if strings.HasPrefix(semanticLine, cfg.LanguageConfig.PackageIdentifier) {
+		// strip off the identifier
+		pkg := strings.TrimSpace(strings.Replace(semanticLine, cfg.LanguageConfig.PackageIdentifier, "", 1))
+		common.LogInfof(common.LogTemplatePackage, pkg)
+		// remember the package name
+		packageName = pkg
+	}
+	return packageName
 }
 
 func determineOutputDestinations(path string, cfg common.Config) (string, string) {
