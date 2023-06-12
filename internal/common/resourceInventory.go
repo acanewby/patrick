@@ -3,6 +3,7 @@ package common
 import (
 	"fmt"
 	"strconv"
+	"strings"
 	"sync"
 )
 
@@ -79,6 +80,15 @@ func (i *ResourceInventory) ResourceToken(index uint64) string {
 	cfg := GetConfig()
 
 	zeroPaddedIndex := fmt.Sprintf("%0"+strconv.FormatUint(uint64(cfg.ResourceIndexZeroPad), 10)+"d", index)
-	return fmt.Sprintf("%s%s", cfg.ResourceTokenPrefix, zeroPaddedIndex)
+	token := fmt.Sprintf("%s%s", cfg.ResourceTokenPrefix, zeroPaddedIndex)
+	LogDebugf(LogTemplateResourceTokenGenerated, index, token)
+	return token
 
+}
+
+func (i *ResourceInventory) GetResourceFunctionCall(token string) string {
+	cfg := GetConfig()
+	functionCall := strings.Replace(cfg.ResourceFunctionTemplate, ResourceFunctionTemplateSubstitutionToken, token, 1)
+	LogDebugf(LogTemplateResourceFunctionCallGenerated, token, functionCall)
+	return functionCall
 }

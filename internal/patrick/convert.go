@@ -89,12 +89,13 @@ It outputs two files:
 func convertFile(inputFilePath string) error {
 
 	var (
-		err         error
-		in          *os.File
-		out         *os.File
-		res         *os.File
-		packageName string
-		codeState   = inNormalCode
+		err           error
+		in            *os.File
+		out           *os.File
+		res           *os.File
+		packageName   string
+		codeState     = inNormalCode
+		resourceToken string
 	)
 
 	cfg := common.GetConfig()
@@ -157,7 +158,7 @@ func convertFile(inputFilePath string) error {
 			if len(literals) != 0 {
 				for _, resource := range literals {
 
-					if resource == "\"\"" {
+					if resource == common.StringRepresentingEmptyString {
 						common.LogDebugf(common.LogTemplateIgnoringEmptyLiteral, resource)
 					} else {
 
@@ -168,17 +169,21 @@ func convertFile(inputFilePath string) error {
 
 						// If it's a new one, write to the resource file
 						if isNew {
-							newResource := fmt.Sprintf("%s%s%s", inv.ResourceToken(idx), cfg.ResourceFileDelimiter, resource)
-							if _, err = res.WriteString(newResource + "\n"); err != nil {
+							resourceToken = inv.ResourceToken(idx)
+							resourceFileEntry := fmt.Sprintf("%s%s%s", resourceToken, cfg.ResourceFileDelimiter, resource)
+							if _, err = res.WriteString(resourceFileEntry + "\n"); err != nil {
 								msg := fmt.Sprintf(common.ErrorTemplateIo, err)
 								common.LogErrorf(msg)
 								fmt.Println(msg)
 								return err
 							}
 						}
+
+						// Update the code line
+						resourceFunctionCall := inv.GetResourceFunctionCall(resourceToken)
+						line = strings.Replace(line, resource, resourceFunctionCall, 1)
 					}
 
-					// Update the code line
 				}
 			}
 		}
@@ -188,6 +193,7 @@ func convertFile(inputFilePath string) error {
 			common.LogErrorf(common.ErrorTemplateIo, err)
 			return err
 		}
+		common.LogDebugf(common.LogTemplateFileWroteLine, line)
 
 	}
 
