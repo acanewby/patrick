@@ -170,8 +170,8 @@ func convertFile(inputFilePath string) error {
 						// If it's a new one, write to the resource file
 						if isNew {
 							resourceToken = inv.ResourceToken(idx)
-							resourceFileEntry := fmt.Sprintf("%s%s%s", resourceToken, cfg.ResourceFileDelimiter, resource)
-							if _, err = res.WriteString(resourceFileEntry + "\n"); err != nil {
+							entry := resourceFileEntry(resourceToken, resource)
+							if _, err = res.WriteString(entry + "\n"); err != nil {
 								msg := fmt.Sprintf(common.ErrorTemplateIo, err)
 								common.LogErrorf(msg)
 								fmt.Println(msg)
@@ -198,6 +198,17 @@ func convertFile(inputFilePath string) error {
 	}
 
 	return nil
+}
+
+func resourceFileEntry(resourceToken string, resource string) string {
+
+	cfg := common.GetConfig()
+
+	entry := fmt.Sprintf("%s%s%s%s%s", cfg.ResourceFilePrefix, resourceToken, cfg.ResourceFileDelimiter, resource, cfg.ResourceFileSuffix)
+
+	common.LogDebugf(common.LogTemplateResourceEntry, entry)
+
+	return entry
 }
 
 func identifyPackage(semanticLine string, cfg common.Config) string {

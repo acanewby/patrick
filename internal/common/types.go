@@ -11,7 +11,9 @@ type Config struct {
 	OverwriteOutput          bool
 	ExcludeFile              string
 	LogLevel                 string
+	ResourceFilePrefix       string
 	ResourceFileDelimiter    string
+	ResourceFileSuffix       string
 	ResourceIndexStart       uint64
 	ResourceIndexZeroPad     uint8
 	ResourceTokenPrefix      string

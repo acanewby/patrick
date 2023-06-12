@@ -15,7 +15,10 @@ var (
 	outputDir       string
 	overwriteOutput bool
 
-	resourceFileDelimiter    string
+	resourceFilePrefix    string
+	resourceFileDelimiter string
+	resourceFileSuffix    string
+
 	resourceIndexStart       uint64
 	resourceIndexZeroPad     uint8
 	resourceTokenPrefix      string
@@ -47,7 +50,9 @@ func init() {
 	convertCmd.Flags().StringVarP(&outputDir, common.FlagOutputDir, "", "", "output directory")
 	convertCmd.Flags().BoolVarP(&overwriteOutput, common.FlagOverwriteOutput, "", false, "replace contents of outputDir")
 
-	convertCmd.Flags().StringVarP(&resourceFileDelimiter, common.FlagResourceFileDelimiter, "", " = ", "delimiter separating resource id and value in resource file")
+	convertCmd.Flags().StringVarP(&resourceFilePrefix, common.FlagResourceFilePrefix, "", "", "text to be written before resource identifier in resource file")
+	convertCmd.Flags().StringVarP(&resourceFileDelimiter, common.FlagResourceFileDelimiter, "", " = ", "text to be written between resource identifier and value in resource file")
+	convertCmd.Flags().StringVarP(&resourceFileSuffix, common.FlagResourceFileSuffix, "", "", "text to be written after value in resource file")
 
 	convertCmd.Flags().Uint64VarP(&resourceIndexStart, common.FlagResourceIndexStart, "", 10000, "starting value for sequentially-numbered resource tokens")
 	convertCmd.Flags().Uint8VarP(&resourceIndexZeroPad, common.FlagResourceIndexZeroPad, "", 8, "width of zero-padded resource token index number")
