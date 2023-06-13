@@ -33,9 +33,17 @@ func setupRun(cfg common.Config) []string {
 }
 
 func dumpConfig(cfg common.Config) {
+
+	common.LfToConsole()
 	common.DoubleLineToConsole()
+	fmt.Println(common.UiLabelConfiguration)
 
 	common.LogDebugf(common.LogTemplateConfig, cfg)
+
+	// Print the general config
+	common.SingleLineToConsole()
+	fmt.Println(common.UiLabelGeneral)
+	common.SingleLineToConsole()
 
 	fmt.Println(fmt.Sprintf(common.UiTemplateInputDir, cfg.InputDir))
 	fmt.Println(fmt.Sprintf(common.UiTemplateOutputDir, cfg.OutputDir))
@@ -52,6 +60,11 @@ func dumpConfig(cfg common.Config) {
 	fmt.Println(fmt.Sprintf(common.UiTemplateResourceIndexZeroPad, cfg.ResourceIndexZeroPad))
 	fmt.Println(fmt.Sprintf(common.UiTemplateResourceTokenPrefix, cfg.ResourceTokenPrefix))
 	fmt.Println(fmt.Sprintf(common.UiTemplateResourceFunctionTemplate, cfg.ResourceFunctionTemplate))
+
+	// Now the language-specific stuff
+	common.SingleLineToConsole()
+	fmt.Println(common.UiLabelSourceCodeSpecific)
+	common.SingleLineToConsole()
 
 	fmt.Println(fmt.Sprintf(common.UiTemplateStringDelimiter, cfg.LanguageConfig.StringDelimiter))
 

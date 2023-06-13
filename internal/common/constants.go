@@ -9,7 +9,7 @@ const (
 )
 
 const (
-	ScreenWidth    = 80
+	ScreenWidth    = 100
 	DoubleLineChar = "="
 	SingleLineChar = "-"
 
@@ -33,6 +33,9 @@ const (
 	FlagResourceTokenPrefix      = "resourceTokenPrefix"
 	FlagResourceFunctionTemplate = "resourceFunctionTemplate"
 
+	UiLabelConfiguration                 = "Configuration"
+	UiLabelGeneral                       = "General"
+	UiLabelSourceCodeSpecific            = "Source code-specific"
 	UiLabelFilesToProcess                = "Files to process"
 	UiTemplateProcessingFile             = "Processing file: %s"
 	UiTemplateOutputFile                 = "Output file: %s"
