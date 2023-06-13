@@ -1,6 +1,6 @@
 # CHANGELOG
 
-## 1.0.0 (UNRELEASED)
+## 1.0.0 (2023JUN13)
 
 ### New Features
 
