@@ -1,5 +1,11 @@
 # patrick
 
+![GitHub](https://img.shields.io/github/license/acanewby/patrick)
+![GitHub last commit (branch)](https://img.shields.io/github/last-commit/acanewby/patrick/main)
+![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/acanewby/patrick/release.yml)
+![GitHub release (latest SemVer)](https://img.shields.io/github/v/release/acanewby/patrick)
+![GitHub Release Date](https://img.shields.io/github/release-date/acanewby/patrick)
+
 ## Introduction
 
 `patrick` is a software engineering support utility.
