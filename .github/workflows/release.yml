@@ -68,7 +68,7 @@ jobs:
       - name: Build app (macOS)
         if: matrix.platform == 'macos-latest'
         run: |
-          brew install create-dmg lipo
+          brew install create-dmg
           env GOOS=${{ env.OS_MAC }} GOARCH=${{ env.ARCH_INTEL }} go build -o ${{ env.BUILD_DIR }}/${{ env.APP_NAME }}-${{ env.ARCH_INTEL }} -ldflags='${{ env.VERSION_LDFLAGS }}' main.go
           env GOOS=${{ env.OS_MAC }} GOARCH=${{ env.ARCH_ARM }} go build -o ${{ env.BUILD_DIR }}/${{ env.APP_NAME }}-${{ env.ARCH_ARM }} -ldflags='${{ env.VERSION_LDFLAGS }}' main.go
           lipo -create -output ${{ env.BUILD_DIR }}/${{ env.APP_NAME }} ${{ env.BUILD_DIR }}/${{ env.APP_NAME }}-${{ env.ARCH_ARM }} ${{ env.BUILD_DIR }}/${{ env.APP_NAME }}-${{ env.ARCH_INTEL }}
