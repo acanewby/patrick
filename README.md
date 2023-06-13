@@ -22,7 +22,7 @@ Specifically, `patrick`:
 * outputs converted source code
 * outputs resource files
 
-_Note: Currently, only [Go](https://go.dev) source code parsing is explicitly supported.  However, other closely-related languages (e.g. Java/C#) may also work. Extension to support other languages is feasible, and may be supported in the future._
+_Note: Currently, only [Go](https://go.dev) source code parsing is explicitly supported.  However, other closely-related languages (e.g. Java/C#) may also work. Support for other languages is feasible, and may be expanded in future releases._
 
 ## Who was Patrick?
 
