@@ -50,7 +50,6 @@ func dumpConfig(cfg common.Config) {
 	fmt.Println(fmt.Sprintf(common.UiTemplateOverwriteOutput, cfg.OverwriteOutput))
 	fmt.Println(fmt.Sprintf(common.UiTemplateExcludesFile, cfg.ExcludeFile))
 	fmt.Println(fmt.Sprintf(common.UiTemplateLogLevel, cfg.LogLevel))
-	fmt.Println(fmt.Sprintf(common.UiTemplatePackageidentifier, cfg.LanguageConfig.PackageIdentifier))
 
 	fmt.Println(fmt.Sprintf(common.UiTemplateResourceFilePrefix, cfg.ResourceFilePrefix))
 	fmt.Println(fmt.Sprintf(common.UiTemplateResourceFileDelimiter, cfg.ResourceFileDelimiter))
@@ -65,6 +64,8 @@ func dumpConfig(cfg common.Config) {
 	common.SingleLineToConsole()
 	fmt.Println(common.UiLabelSourceCodeSpecific)
 	common.SingleLineToConsole()
+
+	fmt.Println(fmt.Sprintf(common.UiTemplatePackageidentifier, cfg.LanguageConfig.PackageIdentifier))
 
 	fmt.Println(fmt.Sprintf(common.UiTemplateStringDelimiter, cfg.LanguageConfig.StringDelimiter))
 

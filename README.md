@@ -6,6 +6,8 @@
 
 Its purpose is to facilitate the conversion of source code containing hard-coded string literals into a form compatible with most resource management approaches.
 
+It can be used to prepare projects for multilingual support and/or centralization of string resources.
+
 Specifically, `patrick`:
 
 * parses source code
@@ -14,9 +16,9 @@ Specifically, `patrick`:
 * outputs converted source code
 * outputs resource files
 
-_Note: Currently, only [Go](https://go.dev) source code parsing is supported.  However, extension to other languages is feasible, and may be supported in the future._
+_Note: Currently, only [Go](https://go.dev) source code parsing is explicitly supported.  However, other closely-related languages (e.g. Java/C#) may also work. Extension to support other languages is feasible, and may be supported in the future._
 
-### Who is (was) Patrick?
+## Who was Patrick?
 
 This tool is named in honor of [J. Patrick Desbrow](https://github.com/PatrickDesbrow), one of my closest friends, who introduced me to the world of professional-grade software product engineering.
 
@@ -26,7 +28,46 @@ in the Borland C++ build system used by TSER (and for which he also ported the [
 
 Sadly, Patrick passed away suddenly in September, 2018. I still miss him.
 
-### Useful features
+## Sample output
+
+__Input:__ in/mypackage/myfile.go
+
+This original source file contains two hardcoded string literals.
+
+```go
+func (cfg *Service) CreateOrUpdateAnalysisConfig(conf AnalysisConfig) {
+
+	runtime.LogDebugf(cfg.ctx, "Saving analysis config: %+v", conf)
+	fullKey := cfg.analysisConfigFullKey(conf.Key)
+	runtime.LogDebugf(cfg.ctx, "Config key: %s", fullKey)
+
+	...
+```
+
+__Output:__ out/mypackage/mypackage.resource
+
+The literals have been identified, extracted, and associated with resource tokens.
+
+```go
+Resource_00010001 = "Saving analysis config: %+v"
+Resource_00010002 = "Config key: %s"
+```
+
+__Output:__ out/mypackage/myfile.go
+
+The new output source file contains resource lookup function calls, which reference the appropriate resource token.
+
+```go
+func (cfg *Service) CreateOrUpdateAnalysisConfig(conf AnalysisConfig) {
+
+    runtime.LogDebugf(cfg.ctx, util.ResourceLookup(mypackage.Resource_00010001), conf)
+    fullKey := cfg.analysisConfigFullKey(conf.Key)
+    runtime.LogDebugf(cfg.ctx, util.ResourceLookup(mypackage.Resource_00010002), fullKey)
+
+    ...
+```
+
+## Useful features
 
 * define a list of excludable files
 * template strings to customize output resource file format
@@ -154,13 +195,16 @@ The built-in defaults produce a resource file format, usable in a variety of con
 --outputDir=/Users/acanewby/Dropbox/scratch/patrick/output --overwriteOutput=true \
 --excludeFiles=/Users/acanewby/Dropbox/scratch/patrick/exclude.list \
 --resourceFunctionTemplate="PKG.utilSvc.Resource(PKG.%%RESOURCE_TOKEN%%)"
-================================================================================
+====================================================================================================
+Configuration
+----------------------------------------------------------------------------------------------------
+General
+----------------------------------------------------------------------------------------------------
 Input directory               : /Users/acanewby/Dropbox/scratch/patrick/input
 Output directory              : /Users/acanewby/Dropbox/scratch/patrick/output
 Overwrite output              : true
 Exclude files                 : /Users/acanewby/Dropbox/scratch/patrick/exclude.list
 Log level                     : info
-Package identifier            : package
 Resource file prefix          : 
 Resource file delimiter       :  = 
 Resource file suffix          : 
@@ -168,6 +212,10 @@ Resource index start          : 10000
 Resource index zero pad       : 8
 Resource token prefix         : Resource_
 Resource function template    : PKG.utilSvc.Resource(PKG.%%RESOURCE_TOKEN%%)
+----------------------------------------------------------------------------------------------------
+Source code-specific
+----------------------------------------------------------------------------------------------------
+Package identifier            : package
 String delimiter              : "
 Single line comment delimiter : //
 Block comment begin delimiter : /*
@@ -176,15 +224,16 @@ Import keyword                : import
 Import block delimiters       : import ( ... )
 Const keyword                 : const
 Const block delimiters        : const ( ... )
-================================================================================
+====================================================================================================
+====================================================================================================
 Files to process
---------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------
 Processing file: /Users/acanewby/Dropbox/scratch/patrick/input/config/config.go
 Processing file: /Users/acanewby/Dropbox/scratch/patrick/input/config/defaults.go
 Processing file: /Users/acanewby/Dropbox/scratch/patrick/input/docker/docker.go
 Processing file: /Users/acanewby/Dropbox/scratch/patrick/input/util/smoke.go
 Processing file: /Users/acanewby/Dropbox/scratch/patrick/input/util/util.go
---------------------------------------------------------------------------------
+====================================================================================================
 ```
 
 ```shell
@@ -208,13 +257,16 @@ However, it is also possible to generate a wide variety of resource file formats
 --resourceFunctionTemplate="PKG.utilSvc.Resource(PKG.%%RESOURCE_TOKEN%%)" \
 --resourceFilePrefix="{" --resourceFileDelimiter=", " --resourceFileSuffix="}," \
 --resourceTokenPrefix=Res#  --resourceIndexStart 1000 --resourceIndexZeroPad 6
-================================================================================
+====================================================================================================
+Configuration
+----------------------------------------------------------------------------------------------------
+General
+----------------------------------------------------------------------------------------------------
 Input directory               : /Users/acanewby/Dropbox/scratch/patrick/input
 Output directory              : /Users/acanewby/Dropbox/scratch/patrick/output
 Overwrite output              : true
 Exclude files                 : /Users/acanewby/Dropbox/scratch/patrick/exclude.list
 Log level                     : info
-Package identifier            : package
 Resource file prefix          : {
 Resource file delimiter       : , 
 Resource file suffix          : },
@@ -222,6 +274,10 @@ Resource index start          : 1000
 Resource index zero pad       : 6
 Resource token prefix         : Res#
 Resource function template    : PKG.utilSvc.Resource(PKG.%%RESOURCE_TOKEN%%)
+----------------------------------------------------------------------------------------------------
+Source code-specific
+----------------------------------------------------------------------------------------------------
+Package identifier            : package
 String delimiter              : "
 Single line comment delimiter : //
 Block comment begin delimiter : /*
@@ -230,15 +286,17 @@ Import keyword                : import
 Import block delimiters       : import ( ... )
 Const keyword                 : const
 Const block delimiters        : const ( ... )
-================================================================================
+====================================================================================================
+====================================================================================================
 Files to process
---------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------
 Processing file: /Users/acanewby/Dropbox/scratch/patrick/input/config/config.go
 Processing file: /Users/acanewby/Dropbox/scratch/patrick/input/config/defaults.go
 Processing file: /Users/acanewby/Dropbox/scratch/patrick/input/docker/docker.go
 Processing file: /Users/acanewby/Dropbox/scratch/patrick/input/util/smoke.go
 Processing file: /Users/acanewby/Dropbox/scratch/patrick/input/util/util.go
---------------------------------------------------------------------------------
+====================================================================================================
+
 ```
 
 ```shell
