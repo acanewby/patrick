@@ -14,20 +14,23 @@ Specifically, `patrick`:
 * outputs converted source code
 * outputs resource files
 
+_Note: Currently, only [Go](https://go.dev) source code parsing is supported.  However, extension to other languages is feasible, and may be supported in the future._
+
 ### Who is (was) Patrick?
 
 This tool is named in honor of [J. Patrick Desbrow](https://github.com/PatrickDesbrow), one of my closest friends, who introduced me to the world of professional-grade software product engineering.
 
 One of Patrick's many marquee achievements was the systematic globalisation and localisation of [TSER](https://www.cnet.com/tech/tech-industry/oracle-buys-financial-software-maker/) (Treasury Services Evaluation and Reporting)
 from hard-coded US English to Japanese (and, indeed, any written language).  He achieved this by writing a tool that parsed approximately 2M lines of C++ source code, identified and tokenized string literals, and generated resource files suitable for inclusion
-in the Borland C++ build system used by TSER.  Quite the achievement in 1995.
+in the Borland C++ build system used by TSER (and for which he also ported the [OWL](https://en.wikipedia.org/wiki/Object_Windows_Library) library from 16- to 32-bit as a party trick).  Quite the achievement in 1995.
 
-Sadly, Patrick passed away suddenly in September, 2018.
+Sadly, Patrick passed away suddenly in September, 2018. I still miss him.
 
 ### Useful features
 
 * define a list of excludable files
-* specify resource token prefixes for absolute `"abc = xyz"` and templated `"abc: %s"` literals
+* template strings to customize output resource file format
+* start point and format parameters for sequential resource token numbering
 * specify the form of a substitute resource lookup function e.g. `util.Resource(<token goes here>)`
 
 ## Command examples
@@ -248,10 +251,4 @@ cat /Users/acanewby/Dropbox/scratch/patrick/output/config/config.resource       
 {Res#001062, "Analysis map (after prune) : %v"},
 {Res#001063, "Resetting config"},
 ```
-## Build
 
-The version number is baked into the build artefact as follows:
-
-```shell
-go build -o ./dist/patrick -ldflags="-X 'github.com/acanewby/patrick/cmd/patrick.version=0.0.2'" main.go  
-```
