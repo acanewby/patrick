@@ -1,5 +1,19 @@
 # CHANGELOG
 
+## 1.0.1 (2023JUN13)
+
+### New Features
+
+* NONE
+
+### Enhancements
+
+* improved documentation
+
+### Bugfixes
+
+* NONE
+
 ## 1.0.0 (2023JUN13)
 
 ### New Features
