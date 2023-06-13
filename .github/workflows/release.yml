@@ -1,0 +1,138 @@
+name: build-and-release
+
+env:
+  APP_NAME: "patrick"
+  MODULE: "github.com/acanewby/patrick"
+  GO_VER: "1.20"
+  OS_MAC: "darwin"
+  OS_LINUX: "linux"
+  OS_WINDOWS: "windows"
+  ARCH_INTEL: "amd64"
+  ARCH_ARM: "arm64"
+  BUILD_DIR: "./dist"
+  LINUX_BUILD_PKGS: "zip"
+
+  # "libgtk-3-0 libwebkit2gtk-4.0-dev nsis osslsigncode rpm fakeroot zip debsigs gnupg jq"
+
+on:
+  push:
+    tags:
+      - "*.*.*"
+# Enable the clause below if you want to trigger the build on push to branch
+# (but without a tag, there will not be a release)
+#    branches:
+#      - your-branch-here
+
+
+jobs:
+  package:
+    strategy:
+      matrix:
+        platform: [macos-latest, ubuntu-latest]
+    runs-on: ${{ matrix.platform }}
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      revision: ${{ steps.version.outputs.revision }}
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          # we need the whole thing so we can count commits.
+          fetch-depth: '0'
+      - name: Install Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: ${{ env.GO_VER }}
+      - name: Inject Version Info
+        id: version
+        run: |
+          VERSION=$(git describe --abbrev=0 --tags $(git rev-list --tags --max-count=1) | tr -d v)
+          [ "$VERSION" != "" ] || VERSION=0.0.0
+          REVISION=$(git rev-list --count --all || echo 0)
+          COMMIT=$(echo "${{github.sha}}" | head -c 7)
+          VERSION_LDFLAGS="-X \"golift.io/version.Branch=${{github.ref_name}} (${COMMIT})\" \
+          -X \"golift.io/version.BuildDate=$(date -u +%Y-%m-%dT%H:%M:00Z)\" \
+          -X \"golift.io/version.BuildUser=$(whoami || echo "unknown")\" \
+          -X \"golift.io/version.Revision=${REVISION}\" \
+          -X \"golift.io/version.Version=${VERSION}\" \
+          -X \"${{ env.MODULE }}/cmd/${{ env.APP_NAME }}.version=${VERSION}\""
+
+          echo "VERSION_LDFLAGS=${VERSION_LDFLAGS}" >> $GITHUB_ENV
+          echo "VERSION=${VERSION}" >> $GITHUB_ENV
+          echo "REVISION=${REVISION}" >> $GITHUB_ENV
+          echo "version=${VERSION}" >> $GITHUB_OUTPUT
+          echo "revision=${REVISION}" >> $GITHUB_OUTPUT
+
+      - name: Where are we?
+        run: pwd
+
+      - name: Build app (macOS)
+        if: matrix.platform == 'macos-latest'
+        run: |
+          brew install create-dmg lipo
+          env GOOS=${{ env.OS_MAC }} GOARCH=${{ env.ARCH_INTEL }} go build -o ${{ env.BUILD_DIR }}/${{ env.APP_NAME }}-${{ env.ARCH_INTEL }} -ldflags='${{ env.VERSION_LDFLAGS }}' main.go
+          env GOOS=${{ env.OS_MAC }} GOARCH=${{ env.ARCH_ARM }} go build -o ${{ env.BUILD_DIR }}/${{ env.APP_NAME }}-${{ env.ARCH_ARM }} -ldflags='${{ env.VERSION_LDFLAGS }}' main.go
+          lipo -create -output ${{ env.BUILD_DIR }}/${{ env.APP_NAME }} ${{ env.BUILD_DIR }}/${{ env.APP_NAME }}-${{ env.ARCH_ARM }} ${{ env.BUILD_DIR }}/${{ env.APP_NAME }}-${{ env.ARCH_INTEL }}
+          create-dmg \
+          --volname "${{ env.APP_NAME }} ${{ env.VERSION }}" \
+          --window-pos 200 120 \
+          --window-size 800 400 \
+          ${{ env.BUILD_DIR }}/${{ env.APP_NAME }}-${{ env.VERSION }}.dmg \
+          ${{ env.BUILD_DIR }}/${{ env.APP_NAME }}
+
+      - name: Build (Windows and Linux)
+        if: matrix.platform == 'ubuntu-latest'
+        run: |
+          echo "-----------------------"
+          echo "General setup"
+          echo "-----------------------"
+          sudo apt update
+          sudo apt install -y ${{ env.LINUX_BUILD_PKGS }}
+          go mod vendor
+          echo "-----------------------"
+          echo "Build Linux"
+          echo "-----------------------"
+          env GOOS=${{ env.OS_LINUX }} GOARCH=${{ env.ARCH_INTEL }} go build -o ${{ env.BUILD_DIR }}/${{ env.APP_NAME }}-${{ env.ARCH_INTEL }} -ldflags='${{ env.VERSION_LDFLAGS }}' main.go
+          gzip < ${{ env.BUILD_DIR }}/${{ env.APP_NAME }}-${{ env.ARCH_INTEL }} > ${{ env.BUILD_DIR }}/${{ env.APP_NAME }}-${{ env.VERSION }}-${{ env.OS_LINUX }}-${{ env.ARCH_INTEL }}.gz
+          echo "-----------------------"
+          echo "Build Windows"
+          echo "-----------------------"
+          env GOOS=${{ env.OS_WINDOWS }} GOARCH=${{ env.ARCH_INTEL }} go build -o ${{ env.BUILD_DIR }}/${{ env.APP_NAME }}-${{ env.ARCH_INTEL }}.exe -ldflags='${{ env.VERSION_LDFLAGS }}' main.go
+          for FILE in ${{ env.BUILD_DIR }}/*.exe; do zip -9j "${FILE%.*}.zip" "${FILE}"; done
+
+      - name: List artifacts
+        run: find ${{ env.BUILD_DIR }}
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ env.APP_NAME }}-${{ matrix.platform }}
+          path: ${{ env.BUILD_DIR }}/*
+
+
+  deploy-github-release:
+    # description: uploads all the built release assets to the GitHub Release.
+    if: startsWith(github.ref, 'refs/tags/')
+    permissions:
+      contents: write
+    needs: package
+    strategy:
+      matrix:
+        # Can't use env vars here ... :(
+        files: [patrick-macos-latest, patrick-ubuntu-latest]
+    name: Deploy GitHub Release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download ${{ matrix.files }} Files
+        uses: actions/download-artifact@v3
+        with:
+          name: ${{ matrix.files }}
+      - name: Publish ${{ matrix.files }} artifacts to github
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            *.rpm
+            *.deb
+            *.zip
+            *.dmg
+            *.gz
+            *.txt
