@@ -81,6 +81,8 @@ jobs:
           echo "Create universal binary"
           echo "-----------------------"
           lipo -create -output ${{ env.BUILD_DIR }}/${{ env.APP_NAME }} ${{ env.BUILD_DIR }}/${{ env.APP_NAME }}-${{ env.ARCH_ARM }} ${{ env.BUILD_DIR }}/${{ env.APP_NAME }}-${{ env.ARCH_INTEL }}
+          rm ${{ env.BUILD_DIR }}/${{ env.APP_NAME }}-${{ env.ARCH_INTEL }}
+          rm ${{ env.BUILD_DIR }}/${{ env.APP_NAME }}-${{ env.ARCH_ARM }}
           echo "-----------------------"
           echo "Create .dmg"
           find ${{ env.BUILD_DIR }}
@@ -90,7 +92,7 @@ jobs:
           --window-pos 200 120 \
           --window-size 800 400 \
           ${{ env.BUILD_DIR }}/${{ env.APP_NAME }}-${{ env.VERSION }}-${{ env.OS_MAC }}.dmg \
-          ${{ env.BUILD_DIR }}/${{ env.APP_NAME }}
+          ${{ env.BUILD_DIR }}
 
       - name: Build (Windows and Linux)
         if: matrix.platform == 'ubuntu-latest'
@@ -105,14 +107,14 @@ jobs:
           echo "Build ${{ env.OS_LINUX }}"
           echo "-----------------------"
           env GOOS=${{ env.OS_LINUX }} GOARCH=${{ env.ARCH_INTEL }} go build -o ${{ env.BUILD_DIR }}/${{ env.APP_NAME }} -ldflags='${{ env.VERSION_LDFLAGS }}' main.go
-          tar -cvzf ${{ env.BUILD_DIR }}/${{ env.APP_NAME }}-${{ env.VERSION }}-${{ env.OS_LINUX }}-${{ env.ARCH_INTEL }}.tar.gz ${{ env.BUILD_DIR }}/${{ env.APP_NAME }}
-          # rm ${{ env.BUILD_DIR }}/${{ env.APP_NAME }}
+          pushd ${{ env.BUILD_DIR }}
+          tar -cvzf ./${{ env.APP_NAME }}-${{ env.VERSION }}-${{ env.OS_LINUX }}-${{ env.ARCH_INTEL }}.tar.gz ./${{ env.APP_NAME }}
+          popd
           echo "-----------------------"
           echo "Build ${{ env.OS_WINDOWS }}"
           echo "-----------------------"
           env GOOS=${{ env.OS_WINDOWS }} GOARCH=${{ env.ARCH_INTEL }} go build -o ${{ env.BUILD_DIR }}/${{ env.APP_NAME }}.exe -ldflags='${{ env.VERSION_LDFLAGS }}' main.go
           zip -9j ${{ env.BUILD_DIR }}/${{ env.APP_NAME }}-${{ env.VERSION }}-${{ env.OS_WINDOWS}}-${{ env.ARCH_INTEL }}.zip ${{ env.BUILD_DIR }}/${{ env.APP_NAME }}.exe
-          # rm ${{ env.BUILD_DIR }}/${{ env.APP_NAME }}.exe
 
       - name: List artifacts
         run: find ${{ env.BUILD_DIR }}
