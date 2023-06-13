@@ -69,14 +69,27 @@ jobs:
         if: matrix.platform == 'macos-latest'
         run: |
           brew install create-dmg
+          echo "-----------------------"
+          echo "Build ${{ env.OS_MAC }}/${{ env.ARCH_INTEL }}"
+          echo "-----------------------"
           env GOOS=${{ env.OS_MAC }} GOARCH=${{ env.ARCH_INTEL }} go build -o ${{ env.BUILD_DIR }}/${{ env.APP_NAME }}-${{ env.ARCH_INTEL }} -ldflags='${{ env.VERSION_LDFLAGS }}' main.go
+          echo "-----------------------"
+          echo "Build ${{ env.OS_MAC }}/${{ env.ARCH_ARM }}"
+          echo "-----------------------"
           env GOOS=${{ env.OS_MAC }} GOARCH=${{ env.ARCH_ARM }} go build -o ${{ env.BUILD_DIR }}/${{ env.APP_NAME }}-${{ env.ARCH_ARM }} -ldflags='${{ env.VERSION_LDFLAGS }}' main.go
+          echo "-----------------------"
+          echo "Create universal binary"
+          echo "-----------------------"
           lipo -create -output ${{ env.BUILD_DIR }}/${{ env.APP_NAME }} ${{ env.BUILD_DIR }}/${{ env.APP_NAME }}-${{ env.ARCH_ARM }} ${{ env.BUILD_DIR }}/${{ env.APP_NAME }}-${{ env.ARCH_INTEL }}
+          echo "-----------------------"
+          echo "Create .dmg"
+          find ${{ env.BUILD_DIR }}
+          echo "-----------------------"
           create-dmg \
           --volname "${{ env.APP_NAME }} ${{ env.VERSION }}" \
           --window-pos 200 120 \
           --window-size 800 400 \
-          ${{ env.BUILD_DIR }}/${{ env.APP_NAME }}-${{ env.VERSION }}.dmg \
+          ${{ env.BUILD_DIR }}/${{ env.APP_NAME }}-${{ env.VERSION }}-${{ env.OS_MAC }}.dmg \
           ${{ env.BUILD_DIR }}/${{ env.APP_NAME }}
 
       - name: Build (Windows and Linux)
@@ -89,15 +102,17 @@ jobs:
           sudo apt install -y ${{ env.LINUX_BUILD_PKGS }}
           go mod vendor
           echo "-----------------------"
-          echo "Build Linux"
+          echo "Build ${{ env.OS_LINUX }}"
           echo "-----------------------"
-          env GOOS=${{ env.OS_LINUX }} GOARCH=${{ env.ARCH_INTEL }} go build -o ${{ env.BUILD_DIR }}/${{ env.APP_NAME }}-${{ env.ARCH_INTEL }} -ldflags='${{ env.VERSION_LDFLAGS }}' main.go
-          gzip < ${{ env.BUILD_DIR }}/${{ env.APP_NAME }}-${{ env.ARCH_INTEL }} > ${{ env.BUILD_DIR }}/${{ env.APP_NAME }}-${{ env.VERSION }}-${{ env.OS_LINUX }}-${{ env.ARCH_INTEL }}.gz
+          env GOOS=${{ env.OS_LINUX }} GOARCH=${{ env.ARCH_INTEL }} go build -o ${{ env.BUILD_DIR }}/${{ env.APP_NAME }} -ldflags='${{ env.VERSION_LDFLAGS }}' main.go
+          tar -cvzf ${{ env.BUILD_DIR }}/${{ env.APP_NAME }}-${{ env.VERSION }}-${{ env.OS_LINUX }}-${{ env.ARCH_INTEL }}.tar.gz ${{ env.BUILD_DIR }}/${{ env.APP_NAME }}
+          # rm ${{ env.BUILD_DIR }}/${{ env.APP_NAME }}
           echo "-----------------------"
-          echo "Build Windows"
+          echo "Build ${{ env.OS_WINDOWS }}"
           echo "-----------------------"
-          env GOOS=${{ env.OS_WINDOWS }} GOARCH=${{ env.ARCH_INTEL }} go build -o ${{ env.BUILD_DIR }}/${{ env.APP_NAME }}-${{ env.ARCH_INTEL }}.exe -ldflags='${{ env.VERSION_LDFLAGS }}' main.go
-          for FILE in ${{ env.BUILD_DIR }}/*.exe; do zip -9j "${FILE%.*}.zip" "${FILE}"; done
+          env GOOS=${{ env.OS_WINDOWS }} GOARCH=${{ env.ARCH_INTEL }} go build -o ${{ env.BUILD_DIR }}/${{ env.APP_NAME }}.exe -ldflags='${{ env.VERSION_LDFLAGS }}' main.go
+          zip -9j ${{ env.BUILD_DIR }}/${{ env.APP_NAME }}-${{ env.VERSION }}-${{ env.OS_WINDOWS}}-${{ env.ARCH_INTEL }}.zip ${{ env.BUILD_DIR }}/${{ env.APP_NAME }}.exe
+          # rm ${{ env.BUILD_DIR }}/${{ env.APP_NAME }}.exe
 
       - name: List artifacts
         run: find ${{ env.BUILD_DIR }}
