@@ -92,7 +92,7 @@ constants.go
 
 `patrick` will ignore any file matching any of the above filenames in the `excludeFiles` file as it traverses the `inputDir` directory tree.
 
-* A log file (`patrick.log`) will be output to the current working directory, with detail level driven by `logLevel`go.
+* A log file (`patrick.log`) will be output to the current working directory, with detail level driven by `logLevel`.
 
 ### List
 
