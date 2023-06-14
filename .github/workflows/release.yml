@@ -41,10 +41,12 @@ jobs:
         with:
           # we need the whole thing so we can count commits.
           fetch-depth: '0'
+
       - name: Install Go
         uses: actions/setup-go@v4
         with:
           go-version: ${{ env.GO_VER }}
+
       - name: Inject Version Info
         id: version
         run: |
@@ -65,9 +67,6 @@ jobs:
           echo "version=${VERSION}" >> $GITHUB_OUTPUT
           echo "revision=${REVISION}" >> $GITHUB_OUTPUT
 
-      - name: Where are we?
-        run: pwd
-
       - name: Build app (macOS)
         if: matrix.platform == 'macos-latest'
         run: |
@@ -86,13 +85,19 @@ jobs:
           rm ${{ env.BUILD_DIR }}/${{ env.APP_NAME }}-${{ env.ARCH_INTEL }}
           rm ${{ env.BUILD_DIR }}/${{ env.APP_NAME }}-${{ env.ARCH_ARM }}
 
-      - name: Codesign app (macOS)
+      - name: Create keychain (macOS)
         if: matrix.platform == 'macos-latest'
         # Extract the secrets we defined earlier as environment variables
         env:
+          # These are for PKG (installer) signing
           MACOS_CERTIFICATE: ${{ secrets.PROD_MACOS_CERTIFICATE }}
           MACOS_CERTIFICATE_PWD: ${{ secrets.PROD_MACOS_CERTIFICATE_PWD }}
           MACOS_CERTIFICATE_NAME: ${{ secrets.PROD_MACOS_CERTIFICATE_NAME }}
+          # These are for APP (executable) signing
+          MACOS_CODE_CERTIFICATE: ${{ secrets.PROD_MACOS_CODE_CERTIFICATE }}
+          MACOS_CODE_CERTIFICATE_PWD: ${{ secrets.PROD_MACOS_CODE_CERTIFICATE_PWD }}
+          MACOS_CODE_CERTIFICATE_NAME: ${{ secrets.PROD_MACOS_CODE_CERTIFICATE_NAME }}
+          # This is to secure the keychain
           MACOS_CI_KEYCHAIN_PWD: ${{ secrets.PROD_MACOS_CI_KEYCHAIN_PWD }}
         run: |
           echo "-----------------------"
@@ -101,11 +106,12 @@ jobs:
           echo "Cert: $MACOS_CERTIFICATE"
           echo "Name: $MACOS_CERTIFICATE_NAME"
 
-          # Turn our base64-encoded certificate back to a regular .p12 file
+          # Turn our base64-encoded certificates back to regular .p12 files
           echo "-----------------------"
           echo "Convert cert .base64 -> .p12"
           echo "-----------------------"
-          echo $MACOS_CERTIFICATE | base64 --decode > certificate.p12
+          echo $MACOS_CERTIFICATE | base64 --decode > installer-certificate.p12
+          echo $MACOS_CODE_CERTIFICATE | base64 --decode > code-certificate.p12
 
           # We need to create a new keychain, otherwise using the certificate will prompt
           # with a UI dialog asking for the certificate password, which we can't
@@ -116,19 +122,29 @@ jobs:
           security create-keychain -p "$MACOS_CI_KEYCHAIN_PWD" build.keychain
           security default-keychain -s build.keychain
           security unlock-keychain -p "$MACOS_CI_KEYCHAIN_PWD" build.keychain
-          security import certificate.p12 -k build.keychain -P "$MACOS_CERTIFICATE_PWD" -T /usr/bin/codesign -T /usr/bin/productsign
+          security import code-certificate.p12 -k build.keychain -P "$MACOS_CODE_CERTIFICATE_PWD" -T /usr/bin/codesign
+          security import installer-certificate.p12 -k build.keychain -P "$MACOS_CERTIFICATE_PWD" -T /usr/bin/productsign
           security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$MACOS_CI_KEYCHAIN_PWD" build.keychain
 
-          # Codesign our app, specifying the Hardened runtime option
-          # /usr/bin/codesign --timestamp --force -s "$MACOS_CERTIFICATE_NAME" --options runtime -v ${{ env.BUILD_DIR }}/${{ env.APP_NAME }}
+      - name: Codesign app and PKG (macOS)
+        if: matrix.platform == 'macos-latest'
+          # Extract the secrets we defined earlier as environment variables
+        env:
+          MACOS_CERTIFICATE_NAME: ${{ secrets.PROD_MACOS_CERTIFICATE_NAME }}
+          MACOS_CODE_CERTIFICATE_NAME: ${{ secrets.PROD_MACOS_CODE_CERTIFICATE_NAME }}
+        run: |
+          echo "-----------------------"
+          echo "Sign app"
+          echo "-----------------------"
+          /usr/bin/codesign --timestamp --force -s "$MACOS_CODE_CERTIFICATE_NAME" --options runtime -v ${{ env.BUILD_DIR }}/${{ env.APP_NAME }}
 
-          # Build the PKG
           echo "-----------------------"
           echo "Create PKG structure"
           echo "-----------------------"
           mkdir -p ${{ env.PKG_DIR }}/${{ env.MACOS_INSTALL_DIR }}
           cp ${{ env.BUILD_DIR }}/${{ env.APP_NAME }} ${{ env.PKG_DIR }}/${{ env.MACOS_INSTALL_DIR }}
           find ${{ env.PKG_DIR }}
+
           echo "-----------------------"
           echo "Build PKG"
           echo "-----------------------"
@@ -138,6 +154,7 @@ jobs:
           echo "Sign: ${{ env.MACOS_CERTIFICATE_NAME }}"
           echo "Pkg : ${{ env.BUILD_DIR }}/${{ env.APP_NAME }}-${{ env.VERSION }}-unsigned.pkg"
           /usr/bin/pkgbuild --root ${{ env.PKG_DIR }} --identifier ${{ env.APP_ID }} --version ${{ env.VERSION }} --install-location "/" ${{ env.BUILD_DIR }}/${{ env.APP_NAME }}-${{ env.VERSION }}-unsigned.pkg
+
           echo "-----------------------"
           echo "Sign PKG"
           echo "-----------------------"
@@ -168,7 +185,9 @@ jobs:
         run: |
           # Store the notarization credentials so that we can prevent a UI password dialog
           # from blocking the CI
-          echo "Create keychain profile"
+          echo "-----------------------"
+          echo "Create notary profile"
+          echo "-----------------------"
           xcrun notarytool store-credentials "notarytool-profile" --apple-id "$PROD_MACOS_NOTARIZATION_APPLE_ID" --team-id "$PROD_MACOS_NOTARIZATION_TEAM_ID" --password "$PROD_MACOS_NOTARIZATION_PWD"
 
           # We can't notarize an app bundle directly, but we need to compress it as an archive.
@@ -185,14 +204,21 @@ jobs:
 
           #echo "Notarize DMG"
           #xcrun notarytool submit "notarization.zip" --keychain-profile "notarytool-profile" --wait
+          echo "-----------------------"
           echo "Notarize PKG"
+          echo "-----------------------"
           xcrun notarytool submit ${{ env.BUILD_DIR }}/${{ env.APP_NAME }}-${{ env.VERSION }}.pkg --keychain-profile "notarytool-profile" --wait
 
-          # Finally, we need to "attach the staple" to our DMG, which will allow our app to be
-          # validated by macOS even when an internet connection is not available.
-          echo "Attach staple"
+          echo "-----------------------"
+          echo "Staple PKG"
+          echo "-----------------------"
           # xcrun stapler staple ${{ env.BUILD_DIR }}/${{ env.APP_NAME }}-${{ env.VERSION }}-${{ env.OS_MAC }}.dmg
           xcrun stapler staple ${{ env.BUILD_DIR }}/${{ env.APP_NAME }}-${{ env.VERSION }}.pkg
+
+          echo "-----------------------"
+          echo "Validate PKG"
+          echo "-----------------------"
+          /usr/sbin/spctl --assess -vv --type install ${{ env.BUILD_DIR }}/${{ env.APP_NAME }}-${{ env.VERSION }}.pkg
 
       - name: Build app (Windows and Linux)
         if: matrix.platform == 'ubuntu-latest'
