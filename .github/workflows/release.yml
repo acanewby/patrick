@@ -113,7 +113,7 @@ jobs:
           # Build the PKG
           mkdir -p ${{ env.PKG_DIR }}/${{ env.MACOS_INSTALL_DIR }}
           cp ${{ env.BUILD_DIR }}/${{ env.APP_NAME }} ${{ env.PKG_DIR }}/${{ env.MACOS_INSTALL_DIR }}
-          pkgbuild --root ${{ env.PKG_DIR }} --identifier ${{ APP_ID }} --version ${{ env.VERSION }} --install-location "/" --sign "$MACOS_CERTIFICATE_NAME" ${{ env.BUILD_DIR }}/${{ env.APP_NAME }}-${{ env.VERSION }}.pkg
+          pkgbuild --root ${{ env.PKG_DIR }} --identifier ${{ env.APP_ID }} --version ${{ env.VERSION }} --install-location "/" --sign "$MACOS_CERTIFICATE_NAME" ${{ env.BUILD_DIR }}/${{ env.APP_NAME }}-${{ env.VERSION }}.pkg
 
 #          echo "-----------------------"
 #          echo "Create .dmg"
