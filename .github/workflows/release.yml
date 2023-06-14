@@ -15,8 +15,6 @@ env:
   MACOS_INSTALL_DIR: "usr/local/bin"
   LINUX_BUILD_PKGS: "zip"
 
-  # "libgtk-3-0 libwebkit2gtk-4.0-dev nsis osslsigncode rpm fakeroot zip debsigs gnupg jq"
-
 on:
   push:
     tags:
@@ -160,20 +158,8 @@ jobs:
           echo "-----------------------"
           echo "Pkg : ${{ env.BUILD_DIR }}/${{ env.APP_NAME }}-${{ env.VERSION }}.pkg"
           /usr/bin/productsign --timestamp --sign "$MACOS_CERTIFICATE_NAME" ${{ env.BUILD_DIR }}/${{ env.APP_NAME }}-${{ env.VERSION }}-unsigned.pkg ${{ env.BUILD_DIR }}/${{ env.APP_NAME }}-${{ env.VERSION }}.pkg
-
-#          echo "-----------------------"
-#          echo "Create .dmg"
-#          echo "-----------------------"
-#          brew install create-dmg
-#          create-dmg \
-#          --volname "${{ env.APP_NAME }} ${{ env.VERSION }}" \
-#          --window-pos 200 120 \
-#          --window-size 800 400 \
-#          ${{ env.BUILD_DIR }}/${{ env.APP_NAME }}-${{ env.VERSION }}-${{ env.OS_MAC }}.dmg \
-#          ${{ env.BUILD_DIR }}
-#
-#          # Codesign our DMG, specifying the Hardened runtime option
-#          /usr/bin/codesign --timestamp --force -s "$MACOS_CERTIFICATE_NAME" --options runtime -v ${{ env.BUILD_DIR }}/${{ env.APP_NAME }}-${{ env.VERSION }}-${{ env.OS_MAC }}.dmg
+          # Don't need the unsigned version any more
+          rm ${{ env.BUILD_DIR }}/${{ env.APP_NAME }}-${{ env.VERSION }}-unsigned.pkg
 
       - name: Notarize and staple PKG (macOS)
         if: matrix.platform == 'macos-latest'
