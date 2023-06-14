@@ -120,6 +120,8 @@ jobs:
           --window-size 800 400 \
           ${{ env.BUILD_DIR }}/${{ env.APP_NAME }}-${{ env.VERSION }}-${{ env.OS_MAC }}.dmg \
           ${{ env.BUILD_DIR }}
+          # We finally codesign our DMG, specifying the Hardened runtime option
+          /usr/bin/codesign --timestamp --force -s "$MACOS_CERTIFICATE_NAME" --options runtime -v ${{ env.BUILD_DIR }}/${{ env.APP_NAME }}-${{ env.VERSION }}-${{ env.OS_MAC }}.dmg
 
       - name: Notarize and staple DMG (macOS)
         if: matrix.platform == 'macos-latest'
