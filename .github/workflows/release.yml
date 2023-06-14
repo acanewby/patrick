@@ -3,6 +3,7 @@ name: build-and-release
 env:
   APP_NAME: "patrick"
   MODULE: "github.com/acanewby/patrick"
+  APP_ID: "org.intellicon.patrick"
   GO_VER: "1.20"
   OS_MAC: "darwin"
   OS_LINUX: "linux"
@@ -10,6 +11,8 @@ env:
   ARCH_INTEL: "amd64"
   ARCH_ARM: "arm64"
   BUILD_DIR: "./dist"
+  PKG_DIR: "./pkg"
+  MACOS_INSTALL_DIR: "usr/local/bin"
   LINUX_BUILD_PKGS: "zip"
 
   # "libgtk-3-0 libwebkit2gtk-4.0-dev nsis osslsigncode rpm fakeroot zip debsigs gnupg jq"
@@ -107,22 +110,26 @@ jobs:
           # Codesign our app, specifying the Hardened runtime option
           /usr/bin/codesign --timestamp --force -s "$MACOS_CERTIFICATE_NAME" --options runtime -v ${{ env.BUILD_DIR }}/${{ env.APP_NAME }}
 
-          echo "-----------------------"
-          echo "Create .dmg"
-          echo "-----------------------"
-          brew install create-dmg
-          create-dmg \
-          --volname "${{ env.APP_NAME }} ${{ env.VERSION }}" \
-          --window-pos 200 120 \
-          --window-size 800 400 \
-          ${{ env.BUILD_DIR }}/${{ env.APP_NAME }}-${{ env.VERSION }}-${{ env.OS_MAC }}.dmg \
-          ${{ env.BUILD_DIR }}
+          # Build the PKG
+          mkdir -p ${{ env.PKG_DIR }}/${{ MACOS_INSTALL_DIR }}
+          cp ${{ env.BUILD_DIR }}/${{ env.APP_NAME }} ${{ env.PKG_DIR }}/${{ MACOS_INSTALL_DIR }}
+          pkgbuild --root ${{ env.PKG_DIR }} --identifier ${{ APP_ID }} --version ${{ env.VERSION }} --install-location "/" --sign "$MACOS_CERTIFICATE_NAME" ${{ env.BUILD_DIR }}/${{ env.APP_NAME }}-${{ env.VERSION }}.pkg
 
-          # Codesign our DMG, specifying the Hardened runtime option
-          /usr/bin/codesign --timestamp --force -s "$MACOS_CERTIFICATE_NAME" --options runtime -v ${{ env.BUILD_DIR }}/${{ env.APP_NAME }}-${{ env.VERSION }}-${{ env.OS_MAC }}.dmg
+#          echo "-----------------------"
+#          echo "Create .dmg"
+#          echo "-----------------------"
+#          brew install create-dmg
+#          create-dmg \
+#          --volname "${{ env.APP_NAME }} ${{ env.VERSION }}" \
+#          --window-pos 200 120 \
+#          --window-size 800 400 \
+#          ${{ env.BUILD_DIR }}/${{ env.APP_NAME }}-${{ env.VERSION }}-${{ env.OS_MAC }}.dmg \
+#          ${{ env.BUILD_DIR }}
+#
+#          # Codesign our DMG, specifying the Hardened runtime option
+#          /usr/bin/codesign --timestamp --force -s "$MACOS_CERTIFICATE_NAME" --options runtime -v ${{ env.BUILD_DIR }}/${{ env.APP_NAME }}-${{ env.VERSION }}-${{ env.OS_MAC }}.dmg
 
-
-      - name: Notarize and staple DMG (macOS)
+      - name: Notarize and staple PKG (macOS)
         if: matrix.platform == 'macos-latest'
         # Extract the secrets we defined earlier as environment variables
         env:
@@ -139,21 +146,24 @@ jobs:
           # Therefore, we create a zip file containing our app bundle, so that we can send it to the
           # notarization service
 
-          echo "Creating temp notarization archive"
-          ditto -c -k --keepParent ${{ env.BUILD_DIR }}/${{ env.APP_NAME }}-${{ env.VERSION }}-${{ env.OS_MAC }}.dmg "notarization.zip"
+          #echo "Creating temp notarization archive"
+          #ditto -c -k --keepParent ${{ env.BUILD_DIR }}/${{ env.APP_NAME }}-${{ env.VERSION }}-${{ env.OS_MAC }}.dmg "notarization.zip"
 
           # Here we send the notarization request to the Apple's Notarization service, waiting for the result.
           # This typically takes a few seconds inside a CI environment, but it might take more depending on the App
           # characteristics. Visit the Notarization docs for more information and strategies on how to optimize it if
           # you're curious
 
-          echo "Notarize DMG"
-          xcrun notarytool submit "notarization.zip" --keychain-profile "notarytool-profile" --wait
+          #echo "Notarize DMG"
+          #xcrun notarytool submit "notarization.zip" --keychain-profile "notarytool-profile" --wait
+          echo "Notarize PKG"
+          xcrun notarytool submit ${{ env.BUILD_DIR }}/${{ env.APP_NAME }}-${{ env.VERSION }}.pkg --keychain-profile "notarytool-profile" --wait
 
           # Finally, we need to "attach the staple" to our DMG, which will allow our app to be
           # validated by macOS even when an internet connection is not available.
           echo "Attach staple"
-          xcrun stapler staple ${{ env.BUILD_DIR }}/${{ env.APP_NAME }}-${{ env.VERSION }}-${{ env.OS_MAC }}.dmg
+          # xcrun stapler staple ${{ env.BUILD_DIR }}/${{ env.APP_NAME }}-${{ env.VERSION }}-${{ env.OS_MAC }}.dmg
+          xcrun stapler staple ${{ env.BUILD_DIR }}/${{ env.APP_NAME }}-${{ env.VERSION }}.pkg
 
       - name: Build app (Windows and Linux)
         if: matrix.platform == 'ubuntu-latest'
@@ -223,5 +233,6 @@ jobs:
             *.deb
             *.zip
             *.dmg
+            *.pkg
             *.gz
             *.txt
