@@ -3,6 +3,7 @@ name: build-and-release
 env:
   APP_NAME: "patrick"
   MODULE: "github.com/acanewby/patrick"
+  APP_ID: "org.intellicon.patrick"
   GO_VER: "1.20"
   OS_MAC: "darwin"
   OS_LINUX: "linux"
@@ -10,9 +11,9 @@ env:
   ARCH_INTEL: "amd64"
   ARCH_ARM: "arm64"
   BUILD_DIR: "./dist"
+  PKG_DIR: "./pkg"
+  MACOS_INSTALL_DIR: "usr/local/bin"
   LINUX_BUILD_PKGS: "zip"
-
-  # "libgtk-3-0 libwebkit2gtk-4.0-dev nsis osslsigncode rpm fakeroot zip debsigs gnupg jq"
 
 on:
   push:
@@ -38,10 +39,12 @@ jobs:
         with:
           # we need the whole thing so we can count commits.
           fetch-depth: '0'
+
       - name: Install Go
         uses: actions/setup-go@v4
         with:
           go-version: ${{ env.GO_VER }}
+
       - name: Inject Version Info
         id: version
         run: |
@@ -62,13 +65,9 @@ jobs:
           echo "version=${VERSION}" >> $GITHUB_OUTPUT
           echo "revision=${REVISION}" >> $GITHUB_OUTPUT
 
-      - name: Where are we?
-        run: pwd
-
       - name: Build app (macOS)
         if: matrix.platform == 'macos-latest'
         run: |
-          brew install create-dmg
           echo "-----------------------"
           echo "Build ${{ env.OS_MAC }}/${{ env.ARCH_INTEL }}"
           echo "-----------------------"
@@ -83,18 +82,131 @@ jobs:
           lipo -create -output ${{ env.BUILD_DIR }}/${{ env.APP_NAME }} ${{ env.BUILD_DIR }}/${{ env.APP_NAME }}-${{ env.ARCH_ARM }} ${{ env.BUILD_DIR }}/${{ env.APP_NAME }}-${{ env.ARCH_INTEL }}
           rm ${{ env.BUILD_DIR }}/${{ env.APP_NAME }}-${{ env.ARCH_INTEL }}
           rm ${{ env.BUILD_DIR }}/${{ env.APP_NAME }}-${{ env.ARCH_ARM }}
-          echo "-----------------------"
-          echo "Create .dmg"
-          find ${{ env.BUILD_DIR }}
-          echo "-----------------------"
-          create-dmg \
-          --volname "${{ env.APP_NAME }} ${{ env.VERSION }}" \
-          --window-pos 200 120 \
-          --window-size 800 400 \
-          ${{ env.BUILD_DIR }}/${{ env.APP_NAME }}-${{ env.VERSION }}-${{ env.OS_MAC }}.dmg \
-          ${{ env.BUILD_DIR }}
 
-      - name: Build (Windows and Linux)
+      - name: Create keychain (macOS)
+        if: matrix.platform == 'macos-latest'
+        # Extract the secrets we defined earlier as environment variables
+        env:
+          # These are for PKG (installer) signing
+          MACOS_CERTIFICATE: ${{ secrets.PROD_MACOS_CERTIFICATE }}
+          MACOS_CERTIFICATE_PWD: ${{ secrets.PROD_MACOS_CERTIFICATE_PWD }}
+          MACOS_CERTIFICATE_NAME: ${{ secrets.PROD_MACOS_CERTIFICATE_NAME }}
+          # These are for APP (executable) signing
+          MACOS_CODE_CERTIFICATE: ${{ secrets.PROD_MACOS_CODE_CERTIFICATE }}
+          MACOS_CODE_CERTIFICATE_PWD: ${{ secrets.PROD_MACOS_CODE_CERTIFICATE_PWD }}
+          MACOS_CODE_CERTIFICATE_NAME: ${{ secrets.PROD_MACOS_CODE_CERTIFICATE_NAME }}
+          # This is to secure the keychain
+          MACOS_CI_KEYCHAIN_PWD: ${{ secrets.PROD_MACOS_CI_KEYCHAIN_PWD }}
+        run: |
+          echo "-----------------------"
+          echo "Environment"
+          echo "-----------------------"
+          echo "Cert: $MACOS_CERTIFICATE"
+          echo "Name: $MACOS_CERTIFICATE_NAME"
+
+          # Turn our base64-encoded certificates back to regular .p12 files
+          echo "-----------------------"
+          echo "Convert cert .base64 -> .p12"
+          echo "-----------------------"
+          echo $MACOS_CERTIFICATE | base64 --decode > installer-certificate.p12
+          echo $MACOS_CODE_CERTIFICATE | base64 --decode > code-certificate.p12
+
+          # We need to create a new keychain, otherwise using the certificate will prompt
+          # with a UI dialog asking for the certificate password, which we can't
+          # use in a headless CI environment
+          echo "-----------------------"
+          echo "Create keychain"
+          echo "-----------------------"
+          security create-keychain -p "$MACOS_CI_KEYCHAIN_PWD" build.keychain
+          security default-keychain -s build.keychain
+          security unlock-keychain -p "$MACOS_CI_KEYCHAIN_PWD" build.keychain
+          security import code-certificate.p12 -k build.keychain -P "$MACOS_CODE_CERTIFICATE_PWD" -T /usr/bin/codesign
+          security import installer-certificate.p12 -k build.keychain -P "$MACOS_CERTIFICATE_PWD" -T /usr/bin/productsign
+          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$MACOS_CI_KEYCHAIN_PWD" build.keychain
+
+      - name: Codesign app and PKG (macOS)
+        if: matrix.platform == 'macos-latest'
+          # Extract the secrets we defined earlier as environment variables
+        env:
+          MACOS_CERTIFICATE_NAME: ${{ secrets.PROD_MACOS_CERTIFICATE_NAME }}
+          MACOS_CODE_CERTIFICATE_NAME: ${{ secrets.PROD_MACOS_CODE_CERTIFICATE_NAME }}
+        run: |
+          echo "-----------------------"
+          echo "Sign app"
+          echo "-----------------------"
+          /usr/bin/codesign --timestamp --force -s "$MACOS_CODE_CERTIFICATE_NAME" --options runtime -v ${{ env.BUILD_DIR }}/${{ env.APP_NAME }}
+
+          echo "-----------------------"
+          echo "Create PKG structure"
+          echo "-----------------------"
+          mkdir -p ${{ env.PKG_DIR }}/${{ env.MACOS_INSTALL_DIR }}
+          cp ${{ env.BUILD_DIR }}/${{ env.APP_NAME }} ${{ env.PKG_DIR }}/${{ env.MACOS_INSTALL_DIR }}
+          find ${{ env.PKG_DIR }}
+
+          echo "-----------------------"
+          echo "Build PKG"
+          echo "-----------------------"
+          echo "Root: ${{ env.PKG_DIR }}"
+          echo "Id  : ${{ env.APP_ID }}"
+          echo "Ver : ${{ env.VERSION }}"
+          echo "Sign: ${{ env.MACOS_CERTIFICATE_NAME }}"
+          echo "Pkg : ${{ env.BUILD_DIR }}/${{ env.APP_NAME }}-${{ env.VERSION }}-unsigned.pkg"
+          /usr/bin/pkgbuild --root ${{ env.PKG_DIR }} --identifier ${{ env.APP_ID }} --version ${{ env.VERSION }} --install-location "/" ${{ env.BUILD_DIR }}/${{ env.APP_NAME }}-${{ env.VERSION }}-unsigned.pkg
+
+          echo "-----------------------"
+          echo "Sign PKG"
+          echo "-----------------------"
+          echo "Pkg : ${{ env.BUILD_DIR }}/${{ env.APP_NAME }}-${{ env.VERSION }}.pkg"
+          /usr/bin/productsign --timestamp --sign "$MACOS_CERTIFICATE_NAME" ${{ env.BUILD_DIR }}/${{ env.APP_NAME }}-${{ env.VERSION }}-unsigned.pkg ${{ env.BUILD_DIR }}/${{ env.APP_NAME }}-${{ env.VERSION }}.pkg
+          # Don't need the unsigned version any more
+          rm ${{ env.BUILD_DIR }}/${{ env.APP_NAME }}-${{ env.VERSION }}-unsigned.pkg
+
+      - name: Notarize and staple PKG (macOS)
+        if: matrix.platform == 'macos-latest'
+        # Extract the secrets we defined earlier as environment variables
+        env:
+          PROD_MACOS_NOTARIZATION_APPLE_ID: ${{ secrets.PROD_MACOS_NOTARIZATION_APPLE_ID }}
+          PROD_MACOS_NOTARIZATION_TEAM_ID: ${{ secrets.PROD_MACOS_NOTARIZATION_TEAM_ID }}
+          PROD_MACOS_NOTARIZATION_PWD: ${{ secrets.PROD_MACOS_NOTARIZATION_PWD }}
+        run: |
+          # Store the notarization credentials so that we can prevent a UI password dialog
+          # from blocking the CI
+          echo "-----------------------"
+          echo "Create notary profile"
+          echo "-----------------------"
+          xcrun notarytool store-credentials "notarytool-profile" --apple-id "$PROD_MACOS_NOTARIZATION_APPLE_ID" --team-id "$PROD_MACOS_NOTARIZATION_TEAM_ID" --password "$PROD_MACOS_NOTARIZATION_PWD"
+
+          # We can't notarize an app bundle directly, but we need to compress it as an archive.
+          # Therefore, we create a zip file containing our app bundle, so that we can send it to the
+          # notarization service
+
+          #echo "Creating temp notarization archive"
+          #ditto -c -k --keepParent ${{ env.BUILD_DIR }}/${{ env.APP_NAME }}-${{ env.VERSION }}-${{ env.OS_MAC }}.dmg "notarization.zip"
+
+          # Here we send the notarization request to the Apple's Notarization service, waiting for the result.
+          # This typically takes a few seconds inside a CI environment, but it might take more depending on the App
+          # characteristics. Visit the Notarization docs for more information and strategies on how to optimize it if
+          # you're curious
+
+          #echo "Notarize DMG"
+          #xcrun notarytool submit "notarization.zip" --keychain-profile "notarytool-profile" --wait
+          echo "-----------------------"
+          echo "Notarize PKG"
+          echo "-----------------------"
+          xcrun notarytool submit ${{ env.BUILD_DIR }}/${{ env.APP_NAME }}-${{ env.VERSION }}.pkg --keychain-profile "notarytool-profile" --wait
+
+          echo "-----------------------"
+          echo "Staple PKG"
+          echo "-----------------------"
+          # xcrun stapler staple ${{ env.BUILD_DIR }}/${{ env.APP_NAME }}-${{ env.VERSION }}-${{ env.OS_MAC }}.dmg
+          xcrun stapler staple ${{ env.BUILD_DIR }}/${{ env.APP_NAME }}-${{ env.VERSION }}.pkg
+
+          echo "-----------------------"
+          echo "Validate PKG"
+          echo "-----------------------"
+          /usr/sbin/spctl --assess -vv --type install ${{ env.BUILD_DIR }}/${{ env.APP_NAME }}-${{ env.VERSION }}.pkg
+
+      - name: Build app (Windows and Linux)
         if: matrix.platform == 'ubuntu-latest'
         run: |
           echo "-----------------------"
@@ -107,14 +219,25 @@ jobs:
           echo "Build ${{ env.OS_LINUX }}"
           echo "-----------------------"
           env GOOS=${{ env.OS_LINUX }} GOARCH=${{ env.ARCH_INTEL }} go build -o ${{ env.BUILD_DIR }}/${{ env.APP_NAME }} -ldflags='${{ env.VERSION_LDFLAGS }}' main.go
-          pushd ${{ env.BUILD_DIR }}
-          tar -cvzf ./${{ env.APP_NAME }}-${{ env.VERSION }}-${{ env.OS_LINUX }}-${{ env.ARCH_INTEL }}.tar.gz ./${{ env.APP_NAME }}
-          popd
           echo "-----------------------"
           echo "Build ${{ env.OS_WINDOWS }}"
           echo "-----------------------"
           env GOOS=${{ env.OS_WINDOWS }} GOARCH=${{ env.ARCH_INTEL }} go build -o ${{ env.BUILD_DIR }}/${{ env.APP_NAME }}.exe -ldflags='${{ env.VERSION_LDFLAGS }}' main.go
-          zip -9j ${{ env.BUILD_DIR }}/${{ env.APP_NAME }}-${{ env.VERSION }}-${{ env.OS_WINDOWS}}-${{ env.ARCH_INTEL }}.zip ${{ env.BUILD_DIR }}/${{ env.APP_NAME }}.exe
+
+      - name: Package app (Windows and Linux)
+        if: matrix.platform == 'ubuntu-latest'
+        run: |
+          pushd ${{ env.BUILD_DIR }}
+          echo "-----------------------"
+          echo "Package ${{ env.OS_LINUX }}"
+          echo "-----------------------"
+          tar -cvzf ./${{ env.APP_NAME }}-${{ env.VERSION }}-${{ env.OS_LINUX }}-${{ env.ARCH_INTEL }}.tar.gz ./${{ env.APP_NAME }}
+          echo "-----------------------"
+          echo "Build ${{ env.OS_WINDOWS }}"
+          echo "-----------------------"
+          zip -9j ./${{ env.APP_NAME }}-${{ env.VERSION }}-${{ env.OS_WINDOWS}}-${{ env.ARCH_INTEL }}.zip ./${{ env.APP_NAME }}.exe
+          popd
+
 
       - name: List artifacts
         run: find ${{ env.BUILD_DIR }}
@@ -151,5 +274,6 @@ jobs:
             *.deb
             *.zip
             *.dmg
+            *.pkg
             *.gz
             *.txt
