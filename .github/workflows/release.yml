@@ -84,6 +84,7 @@ jobs:
           rm ${{ env.BUILD_DIR }}/${{ env.APP_NAME }}-${{ env.ARCH_ARM }}
 
       - name: Codesign app (macOS)
+        if: matrix.platform == 'macos-latest'
         # Extract the secrets we defined earlier as environment variables
         env:
           MACOS_CERTIFICATE: ${{ secrets.PROD_MACOS_CERTIFICATE }}
@@ -107,6 +108,7 @@ jobs:
           /usr/bin/codesign --force -s "$MACOS_CERTIFICATE_NAME" --options runtime ${{ env.BUILD_DIR }}/${{ env.APP_NAME }} -v
 
       - name: Notarize app (macOS)
+        if: matrix.platform == 'macos-latest'
         # Extract the secrets we defined earlier as environment variables
         env:
           PROD_MACOS_NOTARIZATION_APPLE_ID: ${{ secrets.PROD_MACOS_NOTARIZATION_APPLE_ID }}
