@@ -95,12 +95,24 @@ jobs:
           MACOS_CERTIFICATE_NAME: ${{ secrets.PROD_MACOS_CERTIFICATE_NAME }}
           MACOS_CI_KEYCHAIN_PWD: ${{ secrets.PROD_MACOS_CI_KEYCHAIN_PWD }}
         run: |
+          echo "-----------------------"
+          echo "Environment"
+          echo "-----------------------"
+          echo "Cert: $MACOS_CERTIFICATE"
+          echo "Name: $MACOS_CERTIFICATE_NAME"
+
           # Turn our base64-encoded certificate back to a regular .p12 file
+          echo "-----------------------"
+          echo "Convert cert .base64 -> .p12"
+          echo "-----------------------"
           echo $MACOS_CERTIFICATE | base64 --decode > certificate.p12
 
           # We need to create a new keychain, otherwise using the certificate will prompt
           # with a UI dialog asking for the certificate password, which we can't
           # use in a headless CI environment
+          echo "-----------------------"
+          echo "Create keychain"
+          echo "-----------------------"
           security create-keychain -p "$MACOS_CI_KEYCHAIN_PWD" build.keychain
           security default-keychain -s build.keychain
           security unlock-keychain -p "$MACOS_CI_KEYCHAIN_PWD" build.keychain
@@ -111,8 +123,20 @@ jobs:
           # /usr/bin/codesign --timestamp --force -s "$MACOS_CERTIFICATE_NAME" --options runtime -v ${{ env.BUILD_DIR }}/${{ env.APP_NAME }}
 
           # Build the PKG
+          echo "-----------------------"
+          echo "Create PKG structure"
+          echo "-----------------------"
           mkdir -p ${{ env.PKG_DIR }}/${{ env.MACOS_INSTALL_DIR }}
           cp ${{ env.BUILD_DIR }}/${{ env.APP_NAME }} ${{ env.PKG_DIR }}/${{ env.MACOS_INSTALL_DIR }}
+          find ${{ env.PKG_DIR }}
+          echo "-----------------------"
+          echo "Build PKG"
+          echo "-----------------------"
+          echo "Root: ${{ env.PKG_DIR }}"
+          echo "Id  : ${{ env.APP_ID }}"
+          echo "Ver : ${{ env.VERSION }}"
+          echo "Sign: $MACOS_CERTIFICATE_NAME"
+          echo "Pkg : ${{ env.BUILD_DIR }}/${{ env.APP_NAME }}-${{ env.VERSION }}.pkg"
           pkgbuild --root ${{ env.PKG_DIR }} --identifier ${{ env.APP_ID }} --version ${{ env.VERSION }} --install-location "/" --sign "$MACOS_CERTIFICATE_NAME" ${{ env.BUILD_DIR }}/${{ env.APP_NAME }}-${{ env.VERSION }}.pkg
 
 #          echo "-----------------------"
