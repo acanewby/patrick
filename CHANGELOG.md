@@ -1,6 +1,6 @@
 # CHANGELOG
 
-## 1.1.0-beta (UNRELEASED)
+## 1.1.0 (2023JUN14)
 
 ### New Features
 
@@ -8,7 +8,7 @@
 
 ### Enhancements
 
-* NONE
+* Replaced unsigned macOS .dmg package with notarized installer
 
 ### Bugfixes
 
