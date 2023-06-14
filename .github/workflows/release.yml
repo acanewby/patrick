@@ -108,7 +108,7 @@ jobs:
           security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$MACOS_CI_KEYCHAIN_PWD" build.keychain
 
           # Codesign our app, specifying the Hardened runtime option
-          /usr/bin/codesign --timestamp --force -s "$MACOS_CERTIFICATE_NAME" --options runtime -v ${{ env.BUILD_DIR }}/${{ env.APP_NAME }}
+          # /usr/bin/codesign --timestamp --force -s "$MACOS_CERTIFICATE_NAME" --options runtime -v ${{ env.BUILD_DIR }}/${{ env.APP_NAME }}
 
           # Build the PKG
           mkdir -p ${{ env.PKG_DIR }}/${{ env.MACOS_INSTALL_DIR }}
