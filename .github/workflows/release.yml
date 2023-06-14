@@ -137,7 +137,7 @@ jobs:
           echo "Ver : ${{ env.VERSION }}"
           echo "Sign: ${{ env.MACOS_CERTIFICATE_NAME }}"
           echo "Pkg : ${{ env.BUILD_DIR }}/${{ env.APP_NAME }}-${{ env.VERSION }}.pkg"
-          pkgbuild --root ${{ env.PKG_DIR }} --identifier ${{ env.APP_ID }} --version  --install-location "/" --sign "${{ env.MACOS_CERTIFICATE_NAME }}" ${{ env.BUILD_DIR }}/${{ env.APP_NAME }}-${{ env.VERSION }}.pkg
+          pkgbuild --root ${{ env.PKG_DIR }} --identifier ${{ env.APP_ID }} --version ${{ env.VERSION }} --install-location "/" --sign "${{ env.MACOS_CERTIFICATE_NAME }}" ${{ env.BUILD_DIR }}/${{ env.APP_NAME }}-${{ env.VERSION }}.pkg
 
 #          echo "-----------------------"
 #          echo "Create .dmg"
