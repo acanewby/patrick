@@ -1,5 +1,11 @@
 # patrick
 
+![GitHub](https://img.shields.io/github/license/acanewby/patrick)
+![GitHub last commit (branch)](https://img.shields.io/github/last-commit/acanewby/patrick/main)
+![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/acanewby/patrick/release.yml)
+![GitHub release (latest SemVer)](https://img.shields.io/github/v/release/acanewby/patrick)
+![GitHub Release Date](https://img.shields.io/github/release-date/acanewby/patrick)
+
 ## Introduction
 
 `patrick` is a software engineering support utility.
@@ -16,7 +22,7 @@ Specifically, `patrick`:
 * outputs converted source code
 * outputs resource files
 
-_Note: Currently, only [Go](https://go.dev) source code parsing is explicitly supported.  However, other closely-related languages (e.g. Java/C#) may also work. Extension to support other languages is feasible, and may be supported in the future._
+_Note: Currently, only [Go](https://go.dev) source code parsing is explicitly supported.  However, other closely-related languages (e.g. Java/C#) may also work. Support for other languages is feasible, and may be expanded in future releases._
 
 ## Who was Patrick?
 
@@ -92,7 +98,7 @@ constants.go
 
 `patrick` will ignore any file matching any of the above filenames in the `excludeFiles` file as it traverses the `inputDir` directory tree.
 
-* A log file (`patrick.log`) will be output to the current working directory, with detail level driven by `logLevel`go.
+* A log file (`patrick.log`) will be output to the current working directory, with detail level driven by `logLevel`.
 
 ### List
 
