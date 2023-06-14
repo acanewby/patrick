@@ -105,7 +105,7 @@ jobs:
           security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$MACOS_CI_KEYCHAIN_PWD" build.keychain
 
           # We finally codesign our app bundle, specifying the Hardened runtime option
-          /usr/bin/codesign --force -s "$MACOS_CERTIFICATE_NAME" --options runtime ${{ env.BUILD_DIR }}/${{ env.APP_NAME }} -v
+          /usr/bin/codesign --timestamp --force -s "$MACOS_CERTIFICATE_NAME" --options runtime -v ${{ env.BUILD_DIR }}/${{ env.APP_NAME }}
 
       - name: Notarize app (macOS)
         if: matrix.platform == 'macos-latest'
