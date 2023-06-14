@@ -107,7 +107,21 @@ jobs:
           # We finally codesign our app bundle, specifying the Hardened runtime option
           /usr/bin/codesign --timestamp --force -s "$MACOS_CERTIFICATE_NAME" --options runtime -v ${{ env.BUILD_DIR }}/${{ env.APP_NAME }}
 
-      - name: Notarize app (macOS)
+      - name: Package app as DMG (macOS)
+        if: matrix.platform == 'macos-latest'
+        run: |
+          echo "-----------------------"
+          echo "Create .dmg"
+          echo "-----------------------"
+          brew install create-dmg
+          create-dmg \
+          --volname "${{ env.APP_NAME }} ${{ env.VERSION }}" \
+          --window-pos 200 120 \
+          --window-size 800 400 \
+          ${{ env.BUILD_DIR }}/${{ env.APP_NAME }}-${{ env.VERSION }}-${{ env.OS_MAC }}.dmg \
+          ${{ env.BUILD_DIR }}
+
+      - name: Notarize and staple DMG (macOS)
         if: matrix.platform == 'macos-latest'
         # Extract the secrets we defined earlier as environment variables
         env:
@@ -125,35 +139,20 @@ jobs:
           # notarization service
 
           echo "Creating temp notarization archive"
-          ditto -c -k --keepParent ${{ env.BUILD_DIR }}/${{ env.APP_NAME }} "notarization.zip"
+          ditto -c -k --keepParent ${{ env.BUILD_DIR }}/${{ env.APP_NAME }}-${{ env.VERSION }}-${{ env.OS_MAC }}.dmg "notarization.zip"
 
           # Here we send the notarization request to the Apple's Notarization service, waiting for the result.
           # This typically takes a few seconds inside a CI environment, but it might take more depending on the App
           # characteristics. Visit the Notarization docs for more information and strategies on how to optimize it if
           # you're curious
 
-          echo "Notarize app"
+          echo "Notarize DMG"
           xcrun notarytool submit "notarization.zip" --keychain-profile "notarytool-profile" --wait
 
-          # Finally, we need to "attach the staple" to our executable, which will allow our app to be
+          # Finally, we need to "attach the staple" to our DMG, which will allow our app to be
           # validated by macOS even when an internet connection is not available.
           echo "Attach staple"
-          chmod 755 ${{ env.BUILD_DIR }}/${{ env.APP_NAME }}
-          xcrun stapler staple ${{ env.BUILD_DIR }}/${{ env.APP_NAME }}
-
-      - name: Package app (macOS)
-        if: matrix.platform == 'macos-latest'
-        run: |
-          echo "-----------------------"
-          echo "Create .dmg"
-          echo "-----------------------"
-          brew install create-dmg
-          create-dmg \
-          --volname "${{ env.APP_NAME }} ${{ env.VERSION }}" \
-          --window-pos 200 120 \
-          --window-size 800 400 \
-          ${{ env.BUILD_DIR }}/${{ env.APP_NAME }}-${{ env.VERSION }}-${{ env.OS_MAC }}.dmg \
-          ${{ env.BUILD_DIR }}
+          xcrun stapler staple ${{ env.BUILD_DIR }}/${{ env.APP_NAME }}-${{ env.VERSION }}-${{ env.OS_MAC }}.dmg
 
       - name: Build app (Windows and Linux)
         if: matrix.platform == 'ubuntu-latest'
