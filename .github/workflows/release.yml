@@ -151,15 +151,15 @@ jobs:
           echo "Ver : ${{ env.VERSION }}"
           echo "Sign: ${{ env.MACOS_CERTIFICATE_NAME }}"
           echo "Pkg : ${{ env.BUILD_DIR }}/${{ env.APP_NAME }}-${{ env.VERSION }}-unsigned.pkg"
-          /usr/bin/pkgbuild --root ${{ env.PKG_DIR }} --identifier ${{ env.APP_ID }} --version ${{ env.VERSION }} --install-location "/" ${{ env.BUILD_DIR }}/${{ env.APP_NAME }}-${{ env.VERSION }}-unsigned.pkg
+          /usr/bin/pkgbuild --root ${{ env.PKG_DIR }} --identifier ${{ env.APP_ID }} --version ${{ env.VERSION }} --install-location "/" ${{ env.BUILD_DIR }}/${{ env.APP_NAME }}-${{ env.VERSION }}-${{ env.OS_MAC }}-unsigned.pkg
 
           echo "-----------------------"
           echo "Sign PKG"
           echo "-----------------------"
           echo "Pkg : ${{ env.BUILD_DIR }}/${{ env.APP_NAME }}-${{ env.VERSION }}.pkg"
-          /usr/bin/productsign --timestamp --sign "$MACOS_CERTIFICATE_NAME" ${{ env.BUILD_DIR }}/${{ env.APP_NAME }}-${{ env.VERSION }}-unsigned.pkg ${{ env.BUILD_DIR }}/${{ env.APP_NAME }}-${{ env.VERSION }}.pkg
+          /usr/bin/productsign --timestamp --sign "$MACOS_CERTIFICATE_NAME" ${{ env.BUILD_DIR }}/${{ env.APP_NAME }}-${{ env.VERSION }}-${{ env.OS_MAC }}-unsigned.pkg ${{ env.BUILD_DIR }}/${{ env.APP_NAME }}-${{ env.VERSION }}-${{ env.OS_MAC }}.pkg
           # Don't need the unsigned version any more
-          rm ${{ env.BUILD_DIR }}/${{ env.APP_NAME }}-${{ env.VERSION }}-unsigned.pkg
+          rm ${{ env.BUILD_DIR }}/${{ env.APP_NAME }}-${{ env.VERSION }}-${{ env.OS_MAC }}-unsigned.pkg
 
       - name: Notarize and staple PKG (macOS)
         if: matrix.platform == 'macos-latest'
@@ -184,18 +184,17 @@ jobs:
           echo "-----------------------"
           echo "Notarize PKG"
           echo "-----------------------"
-          xcrun notarytool submit ${{ env.BUILD_DIR }}/${{ env.APP_NAME }}-${{ env.VERSION }}.pkg --keychain-profile "notarytool-profile" --wait
+          xcrun notarytool submit ${{ env.BUILD_DIR }}/${{ env.APP_NAME }}-${{ env.VERSION }}-${{ env.OS_MAC }}.pkg --keychain-profile "notarytool-profile" --wait
 
           echo "-----------------------"
           echo "Staple PKG"
           echo "-----------------------"
-          # xcrun stapler staple ${{ env.BUILD_DIR }}/${{ env.APP_NAME }}-${{ env.VERSION }}-${{ env.OS_MAC }}.dmg
-          xcrun stapler staple ${{ env.BUILD_DIR }}/${{ env.APP_NAME }}-${{ env.VERSION }}.pkg
+          xcrun stapler staple ${{ env.BUILD_DIR }}/${{ env.APP_NAME }}-${{ env.VERSION }}-${{ env.OS_MAC }}.pkg
 
           echo "-----------------------"
           echo "Validate PKG"
           echo "-----------------------"
-          /usr/sbin/spctl --assess -vv --type install ${{ env.BUILD_DIR }}/${{ env.APP_NAME }}-${{ env.VERSION }}.pkg
+          /usr/sbin/spctl --assess -vv --type install ${{ env.BUILD_DIR }}/${{ env.APP_NAME }}-${{ env.VERSION }}-${{ env.OS_MAC }}.pkg
 
       - name: Build app (Windows and Linux)
         if: matrix.platform == 'ubuntu-latest'
