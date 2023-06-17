@@ -12,7 +12,7 @@
 
 ### Bugfixes
 
-* NONE
+* [#5](https://github.com/acanewby/patrick/issues/5) - Incorrect handling of already-encountered resources
 
 ## 1.1.0 (2023JUN14)
 

@@ -89,13 +89,12 @@ It outputs two files:
 func convertFile(inputFilePath string) error {
 
 	var (
-		err           error
-		in            *os.File
-		out           *os.File
-		res           *os.File
-		packageName   string
-		codeState     = inNormalCode
-		resourceToken string
+		err         error
+		in          *os.File
+		out         *os.File
+		res         *os.File
+		packageName string
+		codeState   = inNormalCode
 	)
 
 	cfg := common.GetConfig()
@@ -166,10 +165,10 @@ func convertFile(inputFilePath string) error {
 
 						// get the resource index for this token
 						idx, isNew := inv.GetIndexForResource(packageName, resource)
+						resourceToken := inv.ResourceToken(idx)
 
-						// If it's a new one, write to the resource file
+						// If it's a new one, also write to the resource file
 						if isNew {
-							resourceToken = inv.ResourceToken(idx)
 							entry := resourceFileEntry(resourceToken, resource)
 							if _, err = res.WriteString(entry + "\n"); err != nil {
 								msg := fmt.Sprintf(common.ErrorTemplateIo, err)
