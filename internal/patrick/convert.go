@@ -151,7 +151,8 @@ func convertFile(inputFilePath string) error {
 		priorCodeState := codeState
 		codeState = updateCodeState(codeState, semanticLine, blockCommentBegan, blockCommentEnded)
 
-		if shouldParse(priorCodeState, codeState) {
+		parse := shouldParse(priorCodeState, codeState)
+		if parse {
 			// 4. Identify string literals
 			literals := extractStringLiterals(semanticLine)
 			if len(literals) != 0 {
@@ -268,9 +269,13 @@ func semanticLine(line string) (string, bool, bool) {
 					examination = examination[blockEndIdx+len(cfg.LanguageConfig.BlockCommentEndDelimiter) : blockBeginIdx]
 				}
 			} else {
-				// Treat as single-line comment
+				// Treat as single-line comment and exit loop
 				examination = examination[0:blockBeginIdx]
 				blockCommentBegan = true
+				// If the line is now empty, we can exit the loop
+				if examination == "" {
+					break
+				}
 			}
 		}
 
@@ -285,6 +290,10 @@ func semanticLine(line string) (string, bool, bool) {
 				examination = examination[blockEndIdx+len(cfg.LanguageConfig.BlockCommentEndDelimiter) : len(examination)]
 			}
 			blockCommentEnded = true
+			// If the line is now empty, we can exit the loop
+			if examination == "" {
+				break
+			}
 		}
 
 		common.LogDebugf(common.LogTemplateFileTrimmedLine, examination)
@@ -338,12 +347,13 @@ func updateCodeState(currentState codeState, line string, blockCommentBegan bool
 	cfg := common.GetConfig()
 
 	switch {
-	case line == "":
-		newState = onEmptyLine
-	case blockCommentBegan:
+	// We must evaluate block comments first, since they will be semantically resolved to an empty line if there is no actual code
+	case blockCommentBegan || (currentState == inCommentBlock && !blockCommentEnded):
 		newState = inCommentBlock
 	case blockCommentEnded:
 		newState = inNormalCode
+	case line == "":
+		newState = onEmptyLine
 	case line == cfg.LanguageConfig.ConstBlockBegin || (currentState == inConstBlock && line != cfg.LanguageConfig.ConstBlockEnd):
 		newState = inConstBlock
 	case line == cfg.LanguageConfig.ImportBlockBegin || (currentState == inImportBlock && line != cfg.LanguageConfig.ImportBlockEnd):
@@ -406,7 +416,7 @@ func shouldParse(was codeState, is codeState) bool {
 				// we are still in the comment block we were last iteration
 				parse = false
 			} else {
-				// even though this line ends with a block comment, we have parseable code
+				// even though this line ends with a block comment, we may have parseable code
 				parse = true
 			}
 		}

@@ -13,6 +13,7 @@
 ### Bugfixes
 
 * [#5](https://github.com/acanewby/patrick/issues/5) - Incorrect handling of already-encountered resources
+* [#7](https://github.com/acanewby/patrick/issues/7) - String literals in block comments should be ignored
 
 ## 1.1.0 (2023JUN14)
 
