@@ -54,7 +54,7 @@ __Output:__ out/mypackage/mypackage.resource
 
 The literals have been identified, extracted, and associated with resource tokens.
 
-```go
+```
 Resource_00010001 = "Saving analysis config: %+v"
 Resource_00010002 = "Config key: %s"
 ```
@@ -88,7 +88,7 @@ func (cfg *Service) CreateOrUpdateAnalysisConfig(conf AnalysisConfig) {
 
 * File format for the `excludesFile` is like this (e.g. one unqualified filename per line):
 
-```shell
+```
 resource.go
 resources.go
 types.go
@@ -104,7 +104,7 @@ constants.go
 
 Allows you to get a listing of the files that would be processed.  Useful to test your input directory / exclusions configuration.
 
-```shell
+```
 ./patrick list --help                                                                                                                                                                                                                          feature/implement-convert ● ? ↑1
 
 Lists all files that will be targeted for processing, taking into account inclusion and exclusion criteria.
@@ -121,7 +121,7 @@ Global Flags:
       --logLevel string       log level (debug,info,warn,error,fatal) (default "info")
 ```
 
-```shell
+```
 ./patrick list --inputDir=/Users/Anewby/Dropbox/scratch/patrick/input --excludeFiles=/Users/Anewby/Dropbox/scratch/patrick/exclude.list
 ================================================================================
 Input directory               : /Users/Anewby/Dropbox/scratch/patrick/input
@@ -162,7 +162,7 @@ Processes files according to `inputDir` and `excludesFile`, as described above.
 
 It identifies string literals and substitutes them in the output file with tokens recorded in the corresponding package-specific resource file.
 
-```shell
+```
 ./patrick convert --help 
 
 Processes the identified list of files and:
@@ -196,7 +196,7 @@ Global Flags:
 
 The built-in defaults produce a resource file format, usable in a variety of contexts:
 
-```shell
+```
 ./patrick convert --inputDir=/Users/acanewby/Dropbox/scratch/patrick/input \
 --outputDir=/Users/acanewby/Dropbox/scratch/patrick/output --overwriteOutput=true \
 --excludeFiles=/Users/acanewby/Dropbox/scratch/patrick/exclude.list \
@@ -242,8 +242,9 @@ Processing file: /Users/acanewby/Dropbox/scratch/patrick/input/util/util.go
 ====================================================================================================
 ```
 
-```shell
-cat /Users/acanewby/Dropbox/scratch/patrick/output/config/config.resource 
+```
+cat /Users/acanewby/Dropbox/scratch/patrick/output/config/config.resource
+
 Resource_00010001 = "Saving analysis config: %+v"
 Resource_00010002 = "Config key: %s"
 <snip/>
@@ -256,7 +257,7 @@ Resource_00010063 = "Resetting config"
 
 However, it is also possible to generate a wide variety of resource file formats:
 
-```shell
+```
 ./patrick convert --inputDir=/Users/acanewby/Dropbox/scratch/patrick/input \
 --outputDir=/Users/acanewby/Dropbox/scratch/patrick/output --overwriteOutput=true \
 --excludeFiles=/Users/acanewby/Dropbox/scratch/patrick/exclude.list \
@@ -305,8 +306,9 @@ Processing file: /Users/acanewby/Dropbox/scratch/patrick/input/util/util.go
 
 ```
 
-```shell
-cat /Users/acanewby/Dropbox/scratch/patrick/output/config/config.resource        \
+```
+cat /Users/acanewby/Dropbox/scratch/patrick/output/config/config.resource
+
 {Res#001001, "Saving analysis config: %+v"},
 {Res#001002, "Config key: %s"},
 {Res#001003, "%s.%s"},

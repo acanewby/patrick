@@ -60,12 +60,12 @@ func (i *ResourceInventory) GetIndexForResource(pkg string, res string) (uint64,
 
 	// If not, remember it
 	if found {
-		LogDebugf(LogTemplateResourceFound, key, res)
+		LogDebugf(LogTemplateResourceFound, index, key)
 	} else {
 		index = i.getNextIndex()
 		isNew = true
 		i.packageResources[key] = index
-		LogDebugf(LogTemplateResourceGenerated, key, res)
+		LogDebugf(LogTemplateResourceGenerated, index, key)
 	}
 
 	return index, isNew
