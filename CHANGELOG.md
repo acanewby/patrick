@@ -1,6 +1,20 @@
 # CHANGELOG
 
-## 1.1,1 (2023JUN17)
+## 1.2.0-beta (UNRELEASED)
+
+### New Features
+
+* NONE
+
+### Enhancements
+
+* NONE
+
+### Bugfixes
+
+* NONE
+
+## 1.1.1 (2023JUN17)
 
 ### New Features
 
