@@ -1,6 +1,20 @@
 # CHANGELOG
 
-## 1.1,1 (2023JUN17)
+## 1.1.2 (2023JUN18)
+
+### New Features
+
+* NONE
+
+### Enhancements
+
+* NONE
+
+### Bugfixes
+
+* [#8](https://github.com/acanewby/patrick/issues/8) - Blank lines in const blocks break const block detection
+
+## 1.1.1 (2023JUN17)
 
 ### New Features
 

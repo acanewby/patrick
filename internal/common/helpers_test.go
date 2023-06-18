@@ -57,7 +57,7 @@ func TestDirectoryCollisionTableDriven(t *testing.T) {
 	var tests = []directoryCollisionTest{
 		// the table itself
 		{"directory does not exist", goodInputDir, nonExistentDir, false, "stat " + nonExistentDir + ": no such file or directory"},
-		{"path is not a directory", notADir, nonExistentDir, false, "path: [" + notADir + "]  is directory: [false]"},
+		{"path is not a directory", notADir, nonExistentDir, false, "path: [" + notADir + "]  is file, not directory"},
 		{"directories match", goodInputDir, goodInputDir, true, ""},
 		{"directories do not overlap", goodInputDir, goodOutputDir, false, ""},
 		{"directory is a child", goodInputDir, childOutputDir, true, ""},

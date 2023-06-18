@@ -341,26 +341,24 @@ func checkForCommentDelimiters(examination string, cfg common.Config) (bool, boo
 	return singleLineFound, blockBeginFound, blockEndFound, singleLineIdx, blockBeginIdx, blockEndIdx
 }
 
-func updateCodeState(currentState codeState, line string, blockCommentBegan bool, blockCommentEnded bool) codeState {
+func updateCodeState(prevState codeState, line string, blockCommentBegan bool, blockCommentEnded bool) codeState {
 
 	var newState codeState
 	cfg := common.GetConfig()
 
 	switch {
 	// We must evaluate block comments first, since they will be semantically resolved to an empty line if there is no actual code
-	case blockCommentBegan || (currentState == inCommentBlock && !blockCommentEnded):
+	case blockCommentBegan || (prevState == inCommentBlock && !blockCommentEnded):
 		newState = inCommentBlock
 	case blockCommentEnded:
 		newState = inNormalCode
-	case line == "":
-		newState = onEmptyLine
-	case line == cfg.LanguageConfig.ConstBlockBegin || (currentState == inConstBlock && line != cfg.LanguageConfig.ConstBlockEnd):
+	case line == cfg.LanguageConfig.ConstBlockBegin || (prevState == inConstBlock && line != cfg.LanguageConfig.ConstBlockEnd):
 		newState = inConstBlock
-	case line == cfg.LanguageConfig.ImportBlockBegin || (currentState == inImportBlock && line != cfg.LanguageConfig.ImportBlockEnd):
+	case line == cfg.LanguageConfig.ImportBlockBegin || (prevState == inImportBlock && line != cfg.LanguageConfig.ImportBlockEnd):
 		newState = inImportBlock
-	case line == cfg.LanguageConfig.ImportBlockEnd && currentState == inImportBlock:
+	case line == cfg.LanguageConfig.ImportBlockEnd && prevState == inImportBlock:
 		newState = inNormalCode
-	case line == cfg.LanguageConfig.ConstBlockEnd && currentState == inConstBlock:
+	case line == cfg.LanguageConfig.ConstBlockEnd && prevState == inConstBlock:
 		newState = inNormalCode
 	case strings.HasPrefix(line, cfg.LanguageConfig.ImportKeyword):
 		newState = onImportLine
@@ -368,6 +366,9 @@ func updateCodeState(currentState codeState, line string, blockCommentBegan bool
 		newState = onConstLine
 	case strings.HasPrefix(line, cfg.LanguageConfig.PackageIdentifier):
 		newState = onPackageLine
+		// The empty line state should only be returned when we are otherwise in normal code, so we can avoid parsing
+	case line == "":
+		newState = onEmptyLine
 	default:
 		newState = inNormalCode
 	}
