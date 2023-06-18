@@ -12,7 +12,7 @@
 
 ### Bugfixes
 
-* NONE
+* [#8](https://github.com/acanewby/patrick/issues/8) - Blank lines in const blocks break const block detection
 
 ## 1.1.1 (2023JUN17)
 
